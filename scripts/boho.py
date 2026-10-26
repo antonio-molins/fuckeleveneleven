@@ -5,6 +5,7 @@
 import math, sys, urllib.parse
 
 TILE = 120
+SCALE = 1.35  # motif size within the tile; with the 7em tile in CSS, larger and closer together
 
 
 def sparkle(r):
@@ -12,7 +13,7 @@ def sparkle(r):
 
 
 def place(x, y, angle, body):
-    return f"<g transform='translate({x} {y}) rotate({angle})'>{body}</g>"
+    return f"<g transform='translate({x} {y}) rotate({angle}) scale({SCALE})'>{body}</g>"
 
 
 def moon_phases():
@@ -74,6 +75,6 @@ body = ''.join([
 opacity = sys.argv[1] if len(sys.argv) > 1 else 0.1
 svg = (f"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 {TILE} {TILE}'>"
        "<style>.dot{fill:#3a2547;stroke:none}</style>"
-       f"<g fill='none' stroke='#3a2547' stroke-width='0.9' stroke-linecap='round' stroke-linejoin='round' opacity='{opacity}'>"
+       f"<g fill='none' stroke='#3a2547' stroke-width='0.75' stroke-linecap='round' stroke-linejoin='round' opacity='{opacity}'>"
        f"{body}</g></svg>")
 print("data:image/svg+xml," + urllib.parse.quote(svg, safe="/:=' .,-()"))
