@@ -5,22 +5,42 @@
 <section class="countdown" data-countdown aria-live="off">
 	<p class="countdown-lead" data-countdown-lead>Next 11:11 hits</p>
 	<p class="countdown-city" data-countdown-city>somewhere</p>
+	<p class="countdown-local" data-countdown-local></p>
 	<p class="countdown-clock" data-countdown-clock aria-label="time left">--:--:--</p>
 	<p class="countdown-jab" data-countdown-jab></p>
 </section>
 
 <script>
-	import { getOffsets, headlineZone, meridiem, nextElevenEleven, prettyZone, type OffsetGroup } from '../lib/elevenEleven';
+	import cityCounts from '../data/cityCounts.json';
+	import {
+		citiesIn,
+		getOffsets,
+		headlineZone,
+		indexCityCounts,
+		meridiem,
+		nextElevenEleven,
+		prettyZone,
+		type OffsetGroup,
+	} from '../lib/elevenEleven';
+
+	const COUNT_UP_MS = 1200;
 
 	const root = document.querySelector<HTMLElement>('[data-countdown]')!;
 	const lead = root.querySelector('[data-countdown-lead]')!;
 	const city = root.querySelector('[data-countdown-city]')!;
+	const local = root.querySelector('[data-countdown-local]')!;
 	const clock = root.querySelector('[data-countdown-clock]')!;
 	const jab = root.querySelector('[data-countdown-jab]')!;
 	const progress = document.querySelector<HTMLElement>('[data-story-progress]');
+	const html = document.documentElement;
+	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const cities = indexCityCounts(cityCounts);
 
 	let groups: OffsetGroup[] = getOffsets(new Date());
 	let lastTarget = 0;
+	let localTime: Intl.DateTimeFormat | null = null;
+	let otherCities = 0;
+	let countUp = 0;
 
 	const pad = (n: number) => String(n).padStart(2, '0');
 	const hms = (ms: number) => {
@@ -28,10 +48,33 @@
 		return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
 	};
 
-	function jabFor(others: number): string {
-		if (others === 0) return 'and nowhere else. Just them, alone, wishing.';
-		if (others === 1) return 'and 1 other place your guru has never been to.';
-		return `and ${others} other places your guru has never been to.`;
+	function jabFor(shown: number, total: number): string {
+		if (total <= 0) return 'and nowhere else. Just them, alone, wishing.';
+		const n = shown.toLocaleString('en-US');
+		return total === 1 ? `and ${n} other city your guru has never been to.` : `and ${n} other cities your guru has never been to.`;
+	}
+
+	// Counts the cities up from zero. On the mobile intro it waits until the phone fades in.
+	function animateCities() {
+		cancelAnimationFrame(countUp);
+		const total = otherCities;
+		if (reducedMotion || total <= 0) {
+			jab.textContent = jabFor(total, total);
+			return;
+		}
+		let start = 0;
+		const step = (now: number) => {
+			if (html.classList.contains('intro') && !html.classList.contains('intro-landing')) {
+				jab.textContent = jabFor(0, total);
+				countUp = requestAnimationFrame(step);
+				return;
+			}
+			start ||= now;
+			const t = Math.min(1, (now - start) / COUNT_UP_MS);
+			jab.textContent = jabFor(Math.round(total * (1 - (1 - t) ** 3)), total);
+			if (t < 1) countUp = requestAnimationFrame(step);
+		};
+		countUp = requestAnimationFrame(step);
 	}
 
 	function tick() {
@@ -42,16 +85,21 @@
 			groups = getOffsets(new Date(now));
 			next = nextElevenEleven(now, groups);
 			lastTarget = next.targetUtcMs;
+
+			const zone = headlineZone(next.groups);
+			city.textContent = prettyZone(zone);
+			localTime = new Intl.DateTimeFormat('en-US', { timeZone: zone, hour: 'numeric', minute: '2-digit' });
+			otherCities = Math.max(0, citiesIn(next.groups, cities) - 1);
+			if (!next.isNow) animateCities();
 		}
 
 		const zone = headlineZone(next.groups);
 		const offset = next.groups.find((g) => g.zones.includes(zone))!.offsetMinutes;
-		const others = next.groups.reduce((n, g) => n + g.zones.length, 0) - 1;
-
-		city.textContent = prettyZone(zone);
+		local.textContent = `It’s ${localTime!.format(now).toLowerCase()} there.`;
 		document.body.classList.toggle('is-now', next.isNow);
 
 		if (next.isNow) {
+			cancelAnimationFrame(countUp);
 			lead.textContent = `It’s 11:11 ${meridiem(next.targetUtcMs, offset)} right now in`;
 			clock.textContent = hms(next.targetUtcMs + 60_000 - now).slice(3);
 			jab.textContent = 'Wish. Now. Go. The portal closes when that hits zero.';
@@ -59,7 +107,6 @@
 		} else {
 			lead.textContent = `Next 11:11 ${meridiem(next.targetUtcMs, offset)} hits`;
 			clock.textContent = hms(next.targetUtcMs - now);
-			jab.textContent = jabFor(others);
 			const span = next.targetUtcMs - next.previousUtcMs;
 			progress?.style.setProperty('--progress', String((now - next.previousUtcMs) / span));
 		}

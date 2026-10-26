@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+	canonicalZone,
+	citiesIn,
 	getOffsets,
 	headlineZone,
+	indexCityCounts,
 	listZones,
 	meridiem,
 	nextElevenEleven,
@@ -121,5 +124,32 @@ describe('naming', () => {
 	it('knows am from pm', () => {
 		expect(meridiem(utc('2026-10-26T05:26:00'), 345)).toBe('am');
 		expect(meridiem(utc('2026-10-26T05:26:00') + 12 * 60 * MIN, 345)).toBe('pm');
+	});
+});
+
+describe('city counts', () => {
+	it('matches GeoNames zone names to whatever this engine calls them', () => {
+		const index = indexCityCounts({ 'Asia/Kolkata': 3786, 'Asia/Kathmandu': 46 });
+		const engineKolkata = canonicalZone('Asia/Kolkata')!;
+		expect(citiesIn([{ offsetMinutes: 330, zones: [engineKolkata] }], index)).toBe(3786);
+		expect(citiesIn([{ offsetMinutes: 330, zones: ['Asia/Kolkata'] }], index)).toBe(3786);
+	});
+
+	it('adds up every zone in every group hitting 11:11 together', () => {
+		const index = indexCityCounts({ 'Pacific/Pago_Pago': 1, 'Africa/Lagos': 40, 'Africa/Algiers': 60 });
+		const groups = [
+			{ offsetMinutes: -660, zones: ['Pacific/Pago_Pago'] },
+			{ offsetMinutes: 60, zones: ['Africa/Algiers', 'Africa/Lagos'] },
+		];
+		expect(citiesIn(groups, index)).toBe(101);
+	});
+
+	it('counts zones it has no data for as zero', () => {
+		expect(citiesIn([{ offsetMinutes: 0, zones: ['Antarctica/Troll'] }], indexCityCounts({}))).toBe(0);
+	});
+
+	it('ignores zones the engine does not know', () => {
+		expect(canonicalZone('Mars/Olympus_Mons')).toBeNull();
+		expect(indexCityCounts({ 'Mars/Olympus_Mons': 3 }).size).toBe(0);
 	});
 });

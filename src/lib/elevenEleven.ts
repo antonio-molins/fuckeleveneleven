@@ -128,3 +128,27 @@ export function headlineZone(groups: OffsetGroup[]): string {
 export function meridiem(targetUtcMs: number, offsetMinutes: number): 'am' | 'pm' {
 	return mod(targetUtcMs + offsetMinutes * MINUTE_MS, 2 * HALF_DAY_MS) < HALF_DAY_MS ? 'am' : 'pm';
 }
+
+/** The engine's own id for a zone (e.g. Chrome still says Asia/Calcutta for Asia/Kolkata), or null if unknown. */
+export function canonicalZone(zone: string): string | null {
+	try {
+		return new Intl.DateTimeFormat('en-US', { timeZone: zone }).resolvedOptions().timeZone;
+	} catch {
+		return null;
+	}
+}
+
+/** Re-keys GeoNames per-zone city counts by this engine's zone ids, so they match getOffsets(). */
+export function indexCityCounts(counts: Record<string, number>): Map<string, number> {
+	const index = new Map<string, number>();
+	for (const [zone, count] of Object.entries(counts)) {
+		const id = canonicalZone(zone);
+		if (id) index.set(id, (index.get(id) ?? 0) + count);
+	}
+	return index;
+}
+
+/** Cities of 15,000+ people across every zone hitting 11:11 together. */
+export function citiesIn(groups: OffsetGroup[], index: Map<string, number>): number {
+	return groups.flatMap((g) => g.zones).reduce((sum, zone) => sum + (index.get(canonicalZone(zone) ?? zone) ?? 0), 0);
+}

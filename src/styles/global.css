@@ -261,6 +261,12 @@ input {
 	line-height: 1.1;
 }
 
+.countdown-local {
+	font-size: 0.8em;
+	font-style: italic;
+	opacity: 0.75;
+}
+
 .countdown-clock {
 	font-size: 2.6em;
 	font-weight: 300;
@@ -541,6 +547,8 @@ input {
 
 /* Footer */
 .site-footer {
+	display: grid;
+	gap: 0.15rem;
 	padding: 0 1rem 1rem;
 	color: var(--lilac);
 	font-size: 0.95rem;
@@ -553,4 +561,13 @@ input {
 		padding-bottom: 1.5rem;
 		font-size: 1.05rem;
 	}
+}
+
+.site-footer-credit {
+	font-size: 0.85em;
+	opacity: 0.8;
+}
+
+.site-footer-credit a {
+	color: inherit;
 }
