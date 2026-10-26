@@ -1,5 +1,6 @@
 ---
 // The wish box, styled as a story reply bar. It never accepts a wish; see src/lib/sabotage.
+import { KOFI_URL } from '../lib/links';
 ---
 
 <div class="wish">
@@ -10,6 +11,9 @@
 		<button type="submit" class="wish-send" data-wish-submit>Send wish</button>
 	</form>
 	<p class="wish-portal-hint">Wishes are accepted at 11:11:11.111 only.</p>
+	<p class="wish-tip" data-wish-tip hidden>
+		Wish denied. A <a href={KOFI_URL} target="_blank" rel="noopener">coffee on Ko-fi</a>, however, is a real transaction.
+	</p>
 </div>
 
 <dialog class="paywall" data-paywall aria-labelledby="paywall-title">
@@ -43,6 +47,7 @@
 		paywall: document.querySelector('[data-paywall]')!,
 	};
 	const status = document.querySelector<HTMLElement>('[data-wish-status]')!;
+	const tip = document.querySelector<HTMLElement>('[data-wish-tip]')!;
 	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 	const pick = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
 
@@ -74,6 +79,7 @@
 		els.input.value = '';
 		arm();
 		els.form.dataset.attempts = String(++attempts);
+		tip.hidden = false;
 		busy = false;
 	});
 

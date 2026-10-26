@@ -77,6 +77,17 @@ test('rewrites the wish into influencer slop while typing', async ({ page }) => 
 	expect([...value]).toHaveLength('i want a pony'.length);
 });
 
+test('links to Ko-fi, and offers it once a wish has been denied', async ({ page }) => {
+	await page.goto('./');
+	await expect(page.locator('[data-kofi]')).toHaveAttribute('href', 'https://ko-fi.com/lesselevens');
+
+	const tip = page.locator('[data-wish-tip]');
+	await expect(tip).toBeHidden();
+	await submitWish(page, 'a pony');
+	await expect(tip).toBeVisible();
+	await expect(tip.getByRole('link')).toHaveAttribute('href', 'https://ko-fi.com/lesselevens');
+});
+
 test('screenshot', async ({ page }, testInfo) => {
 	await page.clock.install({ time: new Date('2026-10-26T05:12:00Z') });
 	await page.goto('./');

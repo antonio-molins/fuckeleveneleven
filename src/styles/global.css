@@ -335,6 +335,16 @@ input {
 	display: block;
 }
 
+.wish-tip {
+	font-size: 1rem;
+	font-style: italic;
+}
+
+.wish-tip a {
+	color: inherit;
+	font-weight: 600;
+}
+
 /* Paywall */
 .paywall {
 	max-width: min(24rem, calc(100vw - 2rem));
@@ -415,6 +425,18 @@ input {
 
 .manifesto-text p + p {
 	margin-top: 0.8em;
+}
+
+.manifesto-tip {
+	font-size: 1.15rem;
+	color: var(--blush);
+}
+
+.manifesto-tip a {
+	color: var(--peach);
+	font-weight: 600;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 3px;
 }
 
 .manifesto-small {
