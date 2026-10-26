@@ -678,14 +678,14 @@ input {
 	margin-bottom: 0.3rem;
 	padding: 0.3em 1em;
 	border-radius: 999px;
-	background: var(--peach);
-	color: var(--plum);
+	background: rgb(201 182 242 / 0.14); /* --lilac, faint */
+	color: var(--lilac);
 	font-weight: 600;
 	text-decoration: none;
 }
 
 .site-footer-kofi a:hover {
-	background: var(--blush);
+	background: rgb(201 182 242 / 0.26);
 }
 
 .site-footer-credit {
