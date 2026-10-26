@@ -29,6 +29,8 @@ html {
 }
 
 body {
+	display: grid;
+	grid-template-rows: 1fr auto;
 	margin: 0;
 	min-height: 100svh;
 	background: var(--plum);
@@ -76,9 +78,13 @@ input {
 	.stage {
 		grid-template-columns: minmax(0, 27.5rem) minmax(0, 24rem);
 		justify-content: center;
+		align-content: center;
 		align-items: center;
-		min-height: 100svh;
 		gap: 5rem;
+	}
+
+	.story {
+		min-height: min(48rem, calc(100svh - 9rem));
 	}
 }
 
@@ -410,8 +416,6 @@ input {
 
 /* Manifesto, written on the wall */
 .manifesto {
-	display: grid;
-	gap: 1.75rem;
 	max-width: 24rem;
 	color: var(--blush);
 }
@@ -427,20 +431,79 @@ input {
 	margin-top: 0.8em;
 }
 
-.manifesto-tip {
-	font-size: 1.15rem;
-	color: var(--blush);
+/*
+ * Mobile intro (html.intro is set before first paint): the manifesto fills the screen and writes
+ * itself out, then the story slides up over it. Afterwards the page falls back to the normal layout.
+ */
+@media not all and (min-width: 60rem) {
+	.intro body {
+		overflow: hidden;
+	}
+
+	.intro .manifesto {
+		position: fixed;
+		inset: 0;
+		z-index: 0;
+		display: grid;
+		align-content: center;
+		max-width: none;
+		padding: 1.5rem max(1rem, calc((100vw - 24rem) / 2));
+		cursor: pointer;
+		transition: opacity 0.4s 0.3s;
+	}
+
+	.intro .manifesto-char {
+		opacity: 0;
+	}
+
+	.intro .manifesto-char.is-on {
+		opacity: 1;
+	}
+
+	.intro .story {
+		z-index: 1;
+		transform: translateY(105svh);
+		transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+
+	.intro-landing .story {
+		transform: none;
+	}
+
+	.intro-landing .manifesto {
+		opacity: 0;
+	}
+
+	.intro .site-footer {
+		visibility: hidden;
+	}
+
+	/* Hold the hero scrawl until the story has landed, so it isn't drawn off-screen. */
+	.intro:not(.intro-landing) :is(.hero-fuck, .hero-strike path) {
+		animation-play-state: paused;
+	}
 }
 
-.manifesto-tip a {
+/* Footer */
+.site-footer {
+	display: grid;
+	gap: 0.5rem;
+	justify-items: center;
+	padding: 1.5rem 1rem 2.5rem;
+	color: var(--blush);
+	font-size: 1.15rem;
+	text-align: center;
+}
+
+.site-footer a {
 	color: var(--peach);
 	font-weight: 600;
 	text-decoration-thickness: 2px;
 	text-underline-offset: 3px;
 }
 
-.manifesto-small {
-	font-size: 1.05rem;
+.site-footer-small {
+	font-size: 1rem;
 	font-style: italic;
 	color: var(--lilac);
 }

@@ -19,6 +19,13 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<script is:inline>
+			// Decide before first paint, so the story never flashes before the mobile intro.
+			// Must come after the viewport meta: until then mobile browsers report a ~980px layout width.
+			if (matchMedia('not all and (min-width: 60rem)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+				document.documentElement.classList.add('intro');
+			}
+		</script>
 		<meta name="description" content={description} />
 		<meta property="og:title" content="Fuck 11:11" />
 		<meta property="og:description" content={description} />
@@ -52,21 +59,70 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 				<WishForm />
 			</article>
 
-			<aside class="manifesto">
+			<aside class="manifesto" data-manifesto>
 				<div class="manifesto-text">
 					<p>11:11 is a time.</p>
 					<p>It happens twice a day, in about forty time zones, forever.</p>
 					<p>Nobody up there is taking requests.</p>
 					<p>Want something? Go get it. Or don’t. Just stop selling it back to us.</p>
 				</div>
-				<p class="manifesto-tip">
-					Liked this? <a href={KOFI_URL} target="_blank" rel="noopener" data-kofi>Tip me on Ko-fi</a>. Unlike the
-					universe, it actually receives.
-				</p>
-				<p class="manifesto-small">
-					No wishes are stored, sent or read. This site has no server to send them to.
-				</p>
 			</aside>
 		</main>
+
+		<footer class="site-footer">
+			<p>
+				Liked this? <a href={KOFI_URL} target="_blank" rel="noopener" data-kofi>Tip me on Ko-fi</a>. Unlike the universe,
+				it actually receives.
+			</p>
+			<p class="site-footer-small">No wishes are stored, sent or read. This site has no server to send them to.</p>
+		</footer>
+
+		<script>
+			// Mobile intro: the manifesto writes itself out, then the story slides up over it. Tap to skip.
+			const root = document.documentElement;
+			const CHAR_MS = 18;
+			const PARAGRAPH_PAUSE_MS = 260;
+			const HOLD_MS = 700;
+
+			if (root.classList.contains('intro')) {
+				const manifesto = document.querySelector<HTMLElement>('[data-manifesto]')!;
+				const story = document.querySelector<HTMLElement>('.story')!;
+				const chars = [...manifesto.querySelectorAll('.manifesto-text p')].flatMap((p) => {
+					const spans = [...(p.textContent ?? '')].map((c) => {
+						const span = document.createElement('span');
+						span.className = 'manifesto-char';
+						span.textContent = c;
+						return span;
+					});
+					p.replaceChildren(...spans);
+					spans.at(-1)!.dataset.pause = '';
+					return spans;
+				});
+
+				let next = 0;
+				let timer = 0;
+				let landed = false;
+
+				const finish = () => root.classList.remove('intro', 'intro-landing');
+				const land = () => {
+					if (landed) return;
+					landed = true;
+					clearTimeout(timer);
+					chars.forEach((c) => c.classList.add('is-on'));
+					root.classList.add('intro-landing');
+					story.addEventListener('transitionend', (e) => e.target === story && finish());
+					timer = window.setTimeout(finish, 1500); // in case transitionend never fires
+				};
+				const write = () => {
+					const char = chars[next++];
+					char.classList.add('is-on');
+					if (next === chars.length) timer = window.setTimeout(land, HOLD_MS);
+					else timer = window.setTimeout(write, 'pause' in char.dataset ? PARAGRAPH_PAUSE_MS : CHAR_MS);
+				};
+
+				manifesto.addEventListener('click', land);
+				write();
+			}
+		</script>
 	</body>
 </html>
