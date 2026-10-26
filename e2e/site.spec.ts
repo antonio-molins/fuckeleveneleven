@@ -184,6 +184,14 @@ test('reveals the page only once the display fonts are in', async ({ page }) => 
 	expect(loaded).toBe(true);
 });
 
+test('an empty wish is denied too', async ({ page }) => {
+	await open(page);
+	await page.locator('[data-wish-input]').press('Enter');
+	await expect(page.locator('[data-wish-status]')).toHaveText('Empty wishes are a premium feature.');
+	await expect(page.locator('[data-tip-denied]')).toBeVisible();
+	await expect(page.locator('[data-tip-open]')).toBeHidden();
+});
+
 test('the icon-only send button still has a name', async ({ page }) => {
 	await open(page);
 	await expect(page.getByRole('button', { name: 'Send wish' })).toBeVisible();

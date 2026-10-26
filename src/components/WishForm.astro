@@ -65,6 +65,11 @@ import { KOFI_URL } from '../lib/links';
 	let busy = false;
 	let attempts = 0;
 
+	const showDenied = () => {
+		tipOpen.classList.add('is-off');
+		tipDenied.classList.remove('is-off');
+	};
+
 	function arm() {
 		cleanups.forEach((cleanup) => cleanup());
 		active = pickSabotages(Math.random, { reducedMotion: reducedMotion.matches });
@@ -79,6 +84,7 @@ import { KOFI_URL } from '../lib/links';
 		const wish = els.input.value.trim();
 		if (!wish) {
 			status.textContent = 'Empty wishes are a premium feature.';
+			showDenied();
 			return;
 		}
 
@@ -88,8 +94,7 @@ import { KOFI_URL } from '../lib/links';
 		els.input.value = '';
 		arm();
 		els.form.dataset.attempts = String(++attempts);
-		tipOpen.classList.add('is-off');
-		tipDenied.classList.remove('is-off');
+		showDenied();
 		busy = false;
 	});
 
