@@ -290,6 +290,15 @@ input {
 	content: '*';
 }
 
+/* A footnote call: smaller and raised, without stretching the line. */
+.countdown-city::after {
+	position: relative;
+	top: -0.4em;
+	margin-left: 0.15em;
+	font-size: 0.7em;
+	line-height: 0;
+}
+
 .is-now .countdown-city::after,
 .is-now .countdown-jab::before {
 	content: none;
