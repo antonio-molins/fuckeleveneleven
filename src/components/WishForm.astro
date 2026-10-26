@@ -94,7 +94,7 @@
 	<p class="wish-tip">
 		<span data-tip-open>The universe is now accepting wishes. Response times may vary.</span>
 		<span class="is-off" data-tip-denied>
-			Wish denied. Unlike the universe, the Ko-fi below receives.
+			Wish denied. Unlike the universe, the coffee link below receives.
 		</span>
 	</p>
 </div>
@@ -138,11 +138,28 @@
 	const tipDenied = document.querySelector<HTMLElement>('[data-tip-denied]')!;
 	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 	const pick = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
+	/** How long a rejection stays up, then how long it takes to fade (matches .wish-status.is-fading). */
+	const TOAST_MS = 3000;
+	const TOAST_FADE_MS = 400;
 
 	let active: Sabotage[] = [];
 	let cleanups: Cleanup[] = [];
 	let busy = false;
 	let attempts = 0;
+
+	let toastTimer = 0;
+	const say = (message: string) => {
+		clearTimeout(toastTimer);
+		status.classList.remove('is-fading');
+		status.textContent = message;
+		toastTimer = window.setTimeout(() => {
+			status.classList.add('is-fading');
+			toastTimer = window.setTimeout(() => {
+				status.textContent = '';
+				status.classList.remove('is-fading');
+			}, TOAST_FADE_MS);
+		}, TOAST_MS);
+	};
 
 	const showDenied = () => {
 		tipOpen.classList.add('is-off');
@@ -164,7 +181,7 @@
 		const wish = els.input.value.trim();
 		if (!wish) {
 			// Rejected like any other wish: everything resets, including a button that ran off.
-			status.textContent = 'Empty wishes are a premium feature.';
+			say('Empty wishes are a premium feature.');
 			track('wish-denied-empty');
 			els.input.value = '';
 			arm();
@@ -182,7 +199,7 @@
 		const corrected = active.find((s) => s.id === 'correct');
 		const rejecters = active.filter((s) => s.reject && s.id !== 'flee');
 		const rejecter = chased ? flee : (corrected ?? (rejecters.length ? pick(rejecters) : null));
-		status.textContent = rejecter ? await rejecter.reject!(wish, els) : pick(GENERIC_REJECTIONS);
+		say(rejecter ? await rejecter.reject!(wish, els) : pick(GENERIC_REJECTIONS));
 		track(`wish-denied-${rejecter?.id ?? 'generic'}`);
 		els.input.value = '';
 		arm();

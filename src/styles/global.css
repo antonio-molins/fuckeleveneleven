@@ -367,20 +367,46 @@ input {
 	backdrop-filter: blur(6px);
 }
 
+/* Each rejection stays up a few seconds (TOAST_MS in WishForm), then fades. */
+.wish-status.is-fading {
+	opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.wish-status {
+		transition: opacity 0.4s ease-out;
+	}
+}
+
+/* The pill is the form, so the send button sits inside the wish box with a thin rim around it. */
 .wish-form {
 	display: flex;
+	align-items: center;
 	gap: 0.4em;
+	padding: 0.15em;
+	border: 1.5px solid rgb(58 37 71 / 0.55);
+	border-radius: 999px;
+	background: rgb(255 255 255 / 0.35);
+}
+
+.wish-form:has(input:focus-visible) {
+	outline: 3px solid var(--marker);
+	outline-offset: 3px;
 }
 
 .wish-form input {
 	flex: 1;
+	align-self: stretch;
 	min-width: 0;
-	padding: 0.55em 0.9em;
-	border: 1.5px solid rgb(58 37 71 / 0.55);
-	border-radius: 999px;
-	background: rgb(255 255 255 / 0.35);
+	padding: 0 0 0 0.75em;
+	border: 0;
+	background: none;
 	/* iOS zooms into inputs smaller than 16px on focus. */
 	font-size: max(16px, 0.92em);
+}
+
+.wish-form input:focus-visible {
+	outline: none;
 }
 
 .wish-form input::placeholder {

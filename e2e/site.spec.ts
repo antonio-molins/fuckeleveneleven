@@ -119,7 +119,7 @@ test('rewrites the wish into influencer slop while typing, then owns up to it', 
 	expect(await page.locator('[data-paywall]').evaluate((d: HTMLDialogElement) => d.open)).toBe(false);
 });
 
-test('Ko-fi lives in the footer, and a denied wish points down to it', async ({ page }) => {
+test('Ko-fi lives in the footer, and a denied wish points down to its coffee link', async ({ page }) => {
 	await open(page);
 	const kofi = page.locator('a[href*="ko-fi.com"]');
 	await expect(kofi).toHaveCount(1);
@@ -133,7 +133,7 @@ test('Ko-fi lives in the footer, and a denied wish points down to it', async ({ 
 	await submitWish(page, 'a pony');
 	await expect(open_).toBeHidden();
 	await expect(denied).toBeVisible();
-	await expect(denied).toContainText('Ko-fi below');
+	await expect(denied).toContainText('coffee link below');
 	await expect(denied.getByRole('link')).toHaveCount(0);
 	await expect(kofi).toHaveCount(1);
 });
@@ -430,6 +430,16 @@ test('analytics events never include the wish', async ({ page }) => {
 test('the icon-only send button still has a name', async ({ page }) => {
 	await open(page);
 	await expect(page.getByRole('button', { name: 'Send wish' })).toBeVisible();
+});
+
+test('the rejection toast clears itself after a few seconds', async ({ page }) => {
+	await open(page);
+	const status = page.locator('[data-wish-status]');
+	await submitWish(page, '');
+	await expect(status).toHaveText('Empty wishes are a premium feature.');
+	await page.waitForTimeout(1500);
+	await expect(status).not.toBeEmpty();
+	await expect(status).toBeEmpty({ timeout: 4000 });
 });
 
 test('keeps the wish box still when wishes get rejected', async ({ page }) => {
