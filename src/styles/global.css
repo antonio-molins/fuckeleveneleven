@@ -386,8 +386,7 @@ input {
 	z-index: 2;
 	display: inline-flex;
 	align-items: center;
-	gap: 0.35em;
-	padding: 0.55em 0.9em;
+	padding: 0.55em 0.85em;
 	border: 0;
 	border-radius: 999px;
 	background: var(--ink);
@@ -397,10 +396,11 @@ input {
 	transition: transform 0.16s ease-out;
 }
 
-/* Flat, single-colour send icon (paper plane plus sparkles) in the button's text colour. */
+/* Flat, single-colour send icon (paper plane plus twinkling sparkles) in the button's text colour. */
 .wish-send-icon {
-	width: 1.3em;
-	height: 1.3em;
+	width: 1.5em;
+	height: 1.5em;
+	overflow: visible;
 }
 
 .wish-send-plane {
@@ -411,8 +411,32 @@ input {
 	stroke-linecap: round;
 }
 
-.wish-send-sparkles {
+.wish-send-sparkle {
 	fill: currentColor;
+	transform-box: fill-box;
+	transform-origin: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.wish-send-sparkle {
+		animation: twinkle 1.6s ease-in-out infinite;
+	}
+
+	.wish-send-sparkle + .wish-send-sparkle {
+		animation-delay: -0.8s;
+	}
+
+	@keyframes twinkle {
+		0%,
+		100% {
+			opacity: 0.35;
+			transform: scale(0.45) rotate(0deg);
+		}
+		50% {
+			opacity: 1;
+			transform: scale(1) rotate(45deg);
+		}
+	}
 }
 
 .wish-form.is-portal .wish-send {

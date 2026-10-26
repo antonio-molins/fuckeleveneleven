@@ -184,6 +184,11 @@ test('reveals the page only once the display fonts are in', async ({ page }) => 
 	expect(loaded).toBe(true);
 });
 
+test('the icon-only send button still has a name', async ({ page }) => {
+	await open(page);
+	await expect(page.getByRole('button', { name: 'Send wish' })).toBeVisible();
+});
+
 test('keeps the wish box still when wishes get rejected', async ({ page }) => {
 	await open(page);
 	const input = page.locator('[data-wish-input]');
