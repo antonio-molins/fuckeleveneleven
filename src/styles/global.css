@@ -245,44 +245,48 @@ input {
 }
 
 /* Countdown */
+/* Countdown: the influencer's countdown sticker, and the marker comment someone scrawled under it. */
 .countdown {
 	display: grid;
-	gap: 0.15em;
+	justify-items: center;
+	gap: 0.7em;
 	margin-block: auto;
 }
 
-.countdown-lead {
-	font-style: italic;
+.countdown-sticker {
+	display: grid;
+	gap: 0.15em;
+	width: min(100%, 14.5em);
+	padding: 0.75em 1em 0.6em;
+	border-radius: 1em;
+	background: rgb(255 255 255 / 0.72);
+	transform: rotate(-2deg);
 }
 
-.countdown-city {
-	font-size: 1.8em;
+.countdown-title {
+	font-size: 1.15em;
+	font-style: italic;
 	font-weight: 500;
-	line-height: 1.1;
+	line-height: 1.2;
+	text-wrap: balance;
 }
 
 .countdown-clock {
-	font-size: 2.6em;
-	font-weight: 300;
-	font-variant-numeric: lining-nums tabular-nums;
-	line-height: 1.1;
-}
-
-.countdown-prep {
-	margin-right: 0.3em;
-	font-size: 0.4em;
-	font-style: italic;
+	font-size: 2.9em;
 	font-weight: 400;
+	font-variant-numeric: lining-nums tabular-nums;
+	letter-spacing: 0.02em;
+	line-height: 1;
 }
 
 .countdown-jab {
-	max-width: 21em;
-	margin: 0.4em auto 0;
+	max-width: 17em;
 	font-family: var(--scrawl);
-	font-size: 0.84em;
-	line-height: 1.35;
+	font-size: 0.9em;
+	line-height: 1.3;
 	color: var(--marker);
-	transform: rotate(-1.5deg);
+	text-wrap: balance;
+	transform: rotate(-3deg);
 }
 
 /* The final number sits invisibly under the counting one, fixing the width from the start. */
