@@ -284,6 +284,20 @@ input {
 	transform: rotate(-1.5deg);
 }
 
+/* The final number sits invisibly under the counting one, fixing the width from the start. */
+.jab-count {
+	display: inline-grid;
+}
+
+.jab-count > * {
+	grid-area: 1 / 1;
+	justify-self: end;
+}
+
+.jab-count-final {
+	visibility: hidden;
+}
+
 .is-now .countdown-clock {
 	color: var(--spray);
 	font-weight: 500;

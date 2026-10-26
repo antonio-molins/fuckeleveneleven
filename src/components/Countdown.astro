@@ -23,7 +23,7 @@
 		type OffsetGroup,
 	} from '../lib/elevenEleven';
 
-	const COUNT_UP_MS = 1200;
+	const COUNT_UP_MS = 2000;
 
 	const root = document.querySelector<HTMLElement>('[data-countdown]')!;
 	const lead = root.querySelector('[data-countdown-lead]')!;
@@ -48,31 +48,42 @@
 		return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
 	};
 
-	function jabFor(shown: number, total: number): string {
-		if (total <= 0) return 'and nowhere else. Just them, alone, wishing.';
-		const n = shown.toLocaleString('en-US');
-		return total === 1 ? `and ${n} other city your guru has never been to.` : `and ${n} other cities your guru has never been to.`;
-	}
+	const format = (n: number) => n.toLocaleString('en-US');
 
-	// Counts the cities up from zero. On the mobile intro it waits until the phone fades in.
+	// Counts the cities up from zero, in a slot already as wide as the final number so nothing shifts.
+	// On the mobile intro it waits until the phone fades in.
 	function animateCities() {
 		cancelAnimationFrame(countUp);
 		const total = otherCities;
-		if (reducedMotion || total <= 0) {
-			jab.textContent = jabFor(total, total);
+		if (total <= 0) {
+			jab.textContent = 'and nowhere else. Just them, alone, wishing.';
 			return;
 		}
+
+		const slot = document.createElement('span');
+		slot.className = 'jab-count';
+		const final = document.createElement('span');
+		final.className = 'jab-count-final';
+		final.ariaHidden = 'true';
+		final.textContent = format(total);
+		const shown = document.createElement('span');
+		slot.append(final, shown);
+		jab.replaceChildren('and ', slot, total === 1 ? ' other city your guru has never been to.' : ' other cities your guru has never been to.');
+
+		if (reducedMotion) {
+			shown.textContent = format(total);
+			return;
+		}
+		shown.textContent = '0';
 		let start = 0;
 		const step = (now: number) => {
-			if (html.classList.contains('intro') && !html.classList.contains('intro-landing')) {
-				jab.textContent = jabFor(0, total);
-				countUp = requestAnimationFrame(step);
-				return;
+			if (!(html.classList.contains('intro') && !html.classList.contains('intro-landing'))) {
+				start ||= now;
+				const t = Math.min(1, (now - start) / COUNT_UP_MS);
+				shown.textContent = format(Math.round(total * (1 - (1 - t) ** 2)));
+				if (t === 1) return;
 			}
-			start ||= now;
-			const t = Math.min(1, (now - start) / COUNT_UP_MS);
-			jab.textContent = jabFor(Math.round(total * (1 - (1 - t) ** 3)), total);
-			if (t < 1) countUp = requestAnimationFrame(step);
+			countUp = requestAnimationFrame(step);
 		};
 		countUp = requestAnimationFrame(step);
 	}

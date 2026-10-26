@@ -51,10 +51,20 @@ test('counts down to the next 11:11 somewhere', async ({ page }) => {
 
 	await expect(page.locator('[data-countdown-local]')).toHaveText('It’s 10:57 am there.');
 
-	await page.clock.runFor(5_000);
+	// The city count reserves its final width from the first frame, then counts up over ~2s.
+	const count = page.locator('.jab-count');
+	await page.clock.runFor(100);
+	const startWidth = (await count.boundingBox())!.width;
+	await page.clock.runFor(1_000);
+	expect((await count.boundingBox())!.width).toBeCloseTo(startWidth, 0);
+
+	await page.clock.runFor(3_900);
 	await expect(clock).toHaveText('00:13:55');
 	// Kathmandu is the only +05:45 zone; GeoNames lists 46 cities of 15k+ there, so 45 others.
-	await expect(page.locator('[data-countdown-jab]')).toHaveText('and 45 other cities your guru has never been to.');
+	await expect(page.locator('[data-countdown-jab]')).toHaveText('and 45 other cities your guru has never been to.', {
+		useInnerText: true,
+	});
+	expect((await count.boundingBox())!.width).toBeCloseTo(startWidth, 0);
 });
 
 test('shows the portal state during an 11:11 minute', async ({ page }) => {
