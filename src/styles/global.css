@@ -653,9 +653,12 @@ input {
  * alone in the middle of the page, minus its countdown sticker. After the hero's scrawl and
  * strike-through it slides over to its spot (html.reveal-writing) while the manifesto writes itself
  * out beside it. Then the sticker is slapped on from the right and its footnote fades in.
+ * The transitions only exist for those moves (reveal-writing, then the reveal ending). Left on all the
+ * time, a first layout made before the stylesheet arrived would animate into the starting position.
  */
 @media (min-width: 60rem) {
-	.story {
+	.reveal-writing .story,
+	:root:not(.reveal) .story {
 		transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
 	}
 
@@ -671,13 +674,13 @@ input {
 		opacity: 0;
 	}
 
-	.countdown-sticker {
+	:root:not(.reveal) .countdown-sticker {
 		transition:
 			transform 0.7s cubic-bezier(0.34, 1.4, 0.64, 1),
 			opacity 0.2s ease;
 	}
 
-	.countdown-jab {
+	:root:not(.reveal) .countdown-jab {
 		transition: opacity 0.6s ease 0.5s;
 	}
 

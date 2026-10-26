@@ -221,6 +221,27 @@ test('desktop reveal: the phone starts centred, slides over as the text writes i
 	await page.screenshot({ path: testInfo.outputPath('reveal-done.png') });
 });
 
+test('desktop reveal: on a slow stylesheet the phone still starts centred, without sliding in', async ({ page }, testInfo) => {
+	test.skip(testInfo.project.name !== 'desktop', 'the reveal only plays on the desktop layout');
+	await page.route('**/_astro/*.css', async (route) => {
+		await new Promise((resolve) => setTimeout(resolve, 1200));
+		await route.continue();
+	});
+	await page.goto('./', { waitUntil: 'commit' });
+	// Sample the phone's offset from the moment it's in the DOM (styled or not) until it starts sliding over.
+	const offsets = new Set<string>();
+	while (!(await page.locator('html.reveal-writing, html:not(.reveal)').count())) {
+		const transform = await page.evaluate(() => {
+			const story = document.querySelector('.story');
+			return story ? getComputedStyle(story).transform : 'none';
+		});
+		if (transform !== 'none') offsets.add(transform);
+		await page.waitForTimeout(50);
+	}
+	expect(offsets.size).toBe(1); // one centred spot: it never glided into it
+	expect(Number([...offsets][0].split(',')[4])).toBeGreaterThan(100); // matrix(a, b, c, d, x, y): shifted right
+});
+
 test('desktop reveal: a click shows everything at once', async ({ page }, testInfo) => {
 	test.skip(testInfo.project.name !== 'desktop', 'the reveal only plays on the desktop layout');
 	await page.goto('./');
