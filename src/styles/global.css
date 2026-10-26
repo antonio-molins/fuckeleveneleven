@@ -103,13 +103,19 @@ input {
 	overflow: hidden;
 }
 
-/* The screen itself lives on a pseudo-element so the mobile intro can fade it in behind the hero. */
+/*
+ * The screen itself lives on a pseudo-element so the mobile intro can fade it in behind the hero.
+ * Over the gradient: a barely-there luxury-monogram wallpaper of 11:11s, sparkles and moons
+ * (manifestation as a designer brand), tone-on-tone at 7% and sized in em so it scales with the phone.
+ */
 .story::before {
 	content: '';
 	position: absolute;
 	inset: 0;
 	z-index: -1;
-	background: linear-gradient(165deg, var(--lilac), var(--blush) 52%, var(--peach));
+	background:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cg fill='%233a2547' stroke='%233a2547' opacity='0.07'%3E%3Cpath fill='none' stroke-width='1.5' stroke-linecap='round' d='M8 19 9.4 11M11.4 19 12.8 11M17.2 19 18.6 11M20.6 19 22 11'/%3E%3Ccircle stroke='none' cx='15.3' cy='13.4' r='0.8'/%3E%3Ccircle stroke='none' cx='14.8' cy='16.8' r='0.8'/%3E%3Cpath stroke='none' d='M45 10.5Q45 15 49.5 15Q45 15 45 19.5Q45 15 40.5 15Q45 15 45 10.5Z'/%3E%3Cpath stroke='none' d='M17 40.5a4.6 4.6 0 1 0 0 9a3.7 3.7 0 1 1 0-9z'/%3E%3Cpath stroke='none' d='M45 42.4Q45 45 47.6 45Q45 45 45 47.6Q45 45 42.4 45Q45 45 45 42.4Z'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 4.2em 4.2em,
+		linear-gradient(165deg, var(--lilac), var(--blush) 52%, var(--peach));
 }
 
 @media (min-width: 60rem) {
