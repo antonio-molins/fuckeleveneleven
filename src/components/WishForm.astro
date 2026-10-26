@@ -12,73 +12,76 @@ import { KOFI_URL } from '../lib/links';
 			<svg class="wish-send-icon" viewBox="0 0 26 24" aria-hidden="true">
 				<defs>
 					<!-- First half of each orbit runs along the bottom (in front of the plane), second half along the top (behind). -->
-					<path id="send-orbit-a" d="M-1.5 11A15 6 0 0 0 28.5 11A15 6 0 0 0 -1.5 11" />
-					<path id="send-orbit-b" d="M0.5 11A13 5 0 0 0 26.5 11A13 5 0 0 0 0.5 11" />
+					<path id="send-orbit-a" d="M-0.3 10A15 6 0 0 0 29.7 10A15 6 0 0 0 -0.3 10" />
+					<path id="send-orbit-b" d="M1.7 10A13 5 0 0 0 27.7 10A13 5 0 0 0 1.7 10" />
 				</defs>
-				<!-- Each star is drawn twice: under the plane for the back half of its orbit, over it for the front half. -->
-				<g class="wish-send-orbit" transform="rotate(-28 13.5 11)">
-					<g opacity="0">
-						<animateMotion dur="2.4s" begin="-0.00s" repeatCount="indefinite"><mpath href="#send-orbit-a" /></animateMotion>
-						<animate attributeName="opacity" values="0;0.6" keyTimes="0;0.5" calcMode="discrete" dur="2.4s" begin="-0.00s" repeatCount="indefinite" />
-						<path class="wish-send-sparkle" d="M0 -4.6Q0 0 4.6 0Q0 0 0 4.6Q0 0 -4.6 0Q0 0 0 -4.6Z">
-							<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="0.9s" begin="-0.00s" repeatCount="indefinite" />
-						</path>
+				<!-- The plane's visual centre (its centroid) sits up and right of its box; this pulls it to the middle. -->
+				<g transform="translate(-1.7 2)">
+					<!-- Each star is drawn twice: under the plane for the back half of its orbit, over it for the front half. -->
+					<g class="wish-send-orbit" transform="rotate(-28 14.7 10)">
+						<g opacity="0">
+							<animateMotion dur="2.4s" begin="-0.00s" repeatCount="indefinite"><mpath href="#send-orbit-a" /></animateMotion>
+							<animate attributeName="opacity" values="0;0.6" keyTimes="0;0.5" calcMode="discrete" dur="2.4s" begin="-0.00s" repeatCount="indefinite" />
+							<path class="wish-send-sparkle" d="M0 -4.6Q0 0 4.6 0Q0 0 0 4.6Q0 0 -4.6 0Q0 0 0 -4.6Z">
+								<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="0.9s" begin="-0.00s" repeatCount="indefinite" />
+							</path>
+						</g>
+						<g opacity="0">
+							<animateMotion dur="2.4s" begin="-1.20s" repeatCount="indefinite"><mpath href="#send-orbit-a" /></animateMotion>
+							<animate attributeName="opacity" values="0;0.6" keyTimes="0;0.5" calcMode="discrete" dur="2.4s" begin="-1.20s" repeatCount="indefinite" />
+							<path class="wish-send-sparkle" d="M0 -3Q0 0 3 0Q0 0 0 3Q0 0 -3 0Q0 0 0 -3Z">
+								<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="0.7s" begin="-1.20s" repeatCount="indefinite" />
+							</path>
+						</g>
 					</g>
-					<g opacity="0">
-						<animateMotion dur="2.4s" begin="-1.20s" repeatCount="indefinite"><mpath href="#send-orbit-a" /></animateMotion>
-						<animate attributeName="opacity" values="0;0.6" keyTimes="0;0.5" calcMode="discrete" dur="2.4s" begin="-1.20s" repeatCount="indefinite" />
-						<path class="wish-send-sparkle" d="M0 -3Q0 0 3 0Q0 0 0 3Q0 0 -3 0Q0 0 0 -3Z">
-							<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="0.7s" begin="-1.20s" repeatCount="indefinite" />
-						</path>
+					<g class="wish-send-orbit" transform="rotate(32 14.7 10)">
+						<g opacity="0">
+							<animateMotion dur="3.4s" begin="-0.85s" repeatCount="indefinite"><mpath href="#send-orbit-b" /></animateMotion>
+							<animate attributeName="opacity" values="0;0.6" keyTimes="0;0.5" calcMode="discrete" dur="3.4s" begin="-0.85s" repeatCount="indefinite" />
+							<path class="wish-send-sparkle" d="M0 -3.8Q0 0 3.8 0Q0 0 0 3.8Q0 0 -3.8 0Q0 0 0 -3.8Z">
+								<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="1.1s" begin="-0.85s" repeatCount="indefinite" />
+							</path>
+						</g>
+						<g opacity="0">
+							<animateMotion dur="3.4s" begin="-2.55s" repeatCount="indefinite"><mpath href="#send-orbit-b" /></animateMotion>
+							<animate attributeName="opacity" values="0;0.6" keyTimes="0;0.5" calcMode="discrete" dur="3.4s" begin="-2.55s" repeatCount="indefinite" />
+							<path class="wish-send-sparkle" d="M0 -2.5Q0 0 2.5 0Q0 0 0 2.5Q0 0 -2.5 0Q0 0 0 -2.5Z">
+								<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="0.8s" begin="-2.55s" repeatCount="indefinite" />
+							</path>
+						</g>
 					</g>
-				</g>
-				<g class="wish-send-orbit" transform="rotate(32 13.5 11)">
-					<g opacity="0">
-						<animateMotion dur="3.4s" begin="-0.85s" repeatCount="indefinite"><mpath href="#send-orbit-b" /></animateMotion>
-						<animate attributeName="opacity" values="0;0.6" keyTimes="0;0.5" calcMode="discrete" dur="3.4s" begin="-0.85s" repeatCount="indefinite" />
-						<path class="wish-send-sparkle" d="M0 -3.8Q0 0 3.8 0Q0 0 0 3.8Q0 0 -3.8 0Q0 0 0 -3.8Z">
-							<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="1.1s" begin="-0.85s" repeatCount="indefinite" />
-						</path>
+					<path class="wish-send-plane" d="M24 2 17 21l-6-10-8-4 21-5ZM24 2 11 11" />
+					<g class="wish-send-orbit" transform="rotate(-28 14.7 10)">
+						<g opacity="0">
+							<animateMotion dur="2.4s" begin="-0.00s" repeatCount="indefinite"><mpath href="#send-orbit-a" /></animateMotion>
+							<animate attributeName="opacity" values="1;0" keyTimes="0;0.5" calcMode="discrete" dur="2.4s" begin="-0.00s" repeatCount="indefinite" />
+							<path class="wish-send-sparkle" d="M0 -4.6Q0 0 4.6 0Q0 0 0 4.6Q0 0 -4.6 0Q0 0 0 -4.6Z">
+								<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="0.9s" begin="-0.00s" repeatCount="indefinite" />
+							</path>
+						</g>
+						<g opacity="0">
+							<animateMotion dur="2.4s" begin="-1.20s" repeatCount="indefinite"><mpath href="#send-orbit-a" /></animateMotion>
+							<animate attributeName="opacity" values="1;0" keyTimes="0;0.5" calcMode="discrete" dur="2.4s" begin="-1.20s" repeatCount="indefinite" />
+							<path class="wish-send-sparkle" d="M0 -3Q0 0 3 0Q0 0 0 3Q0 0 -3 0Q0 0 0 -3Z">
+								<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="0.7s" begin="-1.20s" repeatCount="indefinite" />
+							</path>
+						</g>
 					</g>
-					<g opacity="0">
-						<animateMotion dur="3.4s" begin="-2.55s" repeatCount="indefinite"><mpath href="#send-orbit-b" /></animateMotion>
-						<animate attributeName="opacity" values="0;0.6" keyTimes="0;0.5" calcMode="discrete" dur="3.4s" begin="-2.55s" repeatCount="indefinite" />
-						<path class="wish-send-sparkle" d="M0 -2.5Q0 0 2.5 0Q0 0 0 2.5Q0 0 -2.5 0Q0 0 0 -2.5Z">
-							<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="0.8s" begin="-2.55s" repeatCount="indefinite" />
-						</path>
-					</g>
-				</g>
-				<path class="wish-send-plane" d="M24 2 17 21l-6-10-8-4 21-5ZM24 2 11 11" />
-				<g class="wish-send-orbit" transform="rotate(-28 13.5 11)">
-					<g opacity="0">
-						<animateMotion dur="2.4s" begin="-0.00s" repeatCount="indefinite"><mpath href="#send-orbit-a" /></animateMotion>
-						<animate attributeName="opacity" values="1;0" keyTimes="0;0.5" calcMode="discrete" dur="2.4s" begin="-0.00s" repeatCount="indefinite" />
-						<path class="wish-send-sparkle" d="M0 -4.6Q0 0 4.6 0Q0 0 0 4.6Q0 0 -4.6 0Q0 0 0 -4.6Z">
-							<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="0.9s" begin="-0.00s" repeatCount="indefinite" />
-						</path>
-					</g>
-					<g opacity="0">
-						<animateMotion dur="2.4s" begin="-1.20s" repeatCount="indefinite"><mpath href="#send-orbit-a" /></animateMotion>
-						<animate attributeName="opacity" values="1;0" keyTimes="0;0.5" calcMode="discrete" dur="2.4s" begin="-1.20s" repeatCount="indefinite" />
-						<path class="wish-send-sparkle" d="M0 -3Q0 0 3 0Q0 0 0 3Q0 0 -3 0Q0 0 0 -3Z">
-							<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="0.7s" begin="-1.20s" repeatCount="indefinite" />
-						</path>
-					</g>
-				</g>
-				<g class="wish-send-orbit" transform="rotate(32 13.5 11)">
-					<g opacity="0">
-						<animateMotion dur="3.4s" begin="-0.85s" repeatCount="indefinite"><mpath href="#send-orbit-b" /></animateMotion>
-						<animate attributeName="opacity" values="1;0" keyTimes="0;0.5" calcMode="discrete" dur="3.4s" begin="-0.85s" repeatCount="indefinite" />
-						<path class="wish-send-sparkle" d="M0 -3.8Q0 0 3.8 0Q0 0 0 3.8Q0 0 -3.8 0Q0 0 0 -3.8Z">
-							<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="1.1s" begin="-0.85s" repeatCount="indefinite" />
-						</path>
-					</g>
-					<g opacity="0">
-						<animateMotion dur="3.4s" begin="-2.55s" repeatCount="indefinite"><mpath href="#send-orbit-b" /></animateMotion>
-						<animate attributeName="opacity" values="1;0" keyTimes="0;0.5" calcMode="discrete" dur="3.4s" begin="-2.55s" repeatCount="indefinite" />
-						<path class="wish-send-sparkle" d="M0 -2.5Q0 0 2.5 0Q0 0 0 2.5Q0 0 -2.5 0Q0 0 0 -2.5Z">
-							<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="0.8s" begin="-2.55s" repeatCount="indefinite" />
-						</path>
+					<g class="wish-send-orbit" transform="rotate(32 14.7 10)">
+						<g opacity="0">
+							<animateMotion dur="3.4s" begin="-0.85s" repeatCount="indefinite"><mpath href="#send-orbit-b" /></animateMotion>
+							<animate attributeName="opacity" values="1;0" keyTimes="0;0.5" calcMode="discrete" dur="3.4s" begin="-0.85s" repeatCount="indefinite" />
+							<path class="wish-send-sparkle" d="M0 -3.8Q0 0 3.8 0Q0 0 0 3.8Q0 0 -3.8 0Q0 0 0 -3.8Z">
+								<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="1.1s" begin="-0.85s" repeatCount="indefinite" />
+							</path>
+						</g>
+						<g opacity="0">
+							<animateMotion dur="3.4s" begin="-2.55s" repeatCount="indefinite"><mpath href="#send-orbit-b" /></animateMotion>
+							<animate attributeName="opacity" values="1;0" keyTimes="0;0.5" calcMode="discrete" dur="3.4s" begin="-2.55s" repeatCount="indefinite" />
+							<path class="wish-send-sparkle" d="M0 -2.5Q0 0 2.5 0Q0 0 0 2.5Q0 0 -2.5 0Q0 0 0 -2.5Z">
+								<animateTransform attributeName="transform" type="scale" values="0.6;1.2;0.6" dur="0.8s" begin="-2.55s" repeatCount="indefinite" />
+							</path>
+						</g>
 					</g>
 				</g>
 				<g class="wish-send-still">

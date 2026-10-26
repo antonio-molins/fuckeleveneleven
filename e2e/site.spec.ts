@@ -192,6 +192,21 @@ test('an empty wish is denied too', async ({ page }) => {
 	await expect(page.locator('[data-tip-open]')).toBeHidden();
 });
 
+test('the fleeing button comes back when you go back to the wish box', async ({ page }) => {
+	await open(page);
+	const form = page.locator('[data-wish-form]');
+	for (let i = 0; i < 40 && !(await activeSabotages(page)).includes('flee'); i++) await submitWish(page, 'x');
+	test.skip(!(await activeSabotages(page)).includes('flee'), 'never rolled "flee"');
+
+	const submit = page.locator('[data-wish-submit]');
+	await submit.focus(); // keyboard focus makes it run
+	await expect(submit).not.toHaveAttribute('style', /^$|transform: none/);
+	await expect(form).toHaveClass(/is-fleeing/);
+
+	await page.locator('[data-wish-input]').focus();
+	await expect.poll(() => submit.evaluate((el) => el.style.transform)).toBe('');
+});
+
 test('the icon-only send button still has a name', async ({ page }) => {
 	await open(page);
 	await expect(page.getByRole('button', { name: 'Send wish' })).toBeVisible();
