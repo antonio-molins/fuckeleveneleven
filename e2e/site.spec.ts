@@ -116,11 +116,28 @@ test('mobile intro writes the manifesto, then the story slides over it', async (
 	await page.screenshot({ path: testInfo.outputPath('intro-landed.png') });
 });
 
-test('skips the intro for people who prefer reduced motion', async ({ page }) => {
+test('with reduced motion, shows the manifesto at once, then the story without sliding', async ({ page }, testInfo) => {
+	test.skip(testInfo.project.name !== 'mobile', 'the intro only plays on the mobile layout');
 	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.goto('./');
-	await expect(page.locator('html')).not.toHaveClass(/intro/);
+	await expect(page.locator('html')).toHaveClass(/intro/);
+	await expect(page.locator('.manifesto-char:not(.is-on)')).toHaveCount(0);
+	await expect(page.locator('html')).not.toHaveClass(/intro/, { timeout: 6_000 });
 	await expect(page.locator('.story')).toBeInViewport();
+});
+
+test('after the intro, the manifesto stays covered and the footer sits below the story', async ({ page }, testInfo) => {
+	test.skip(testInfo.project.name !== 'mobile', 'the intro only plays on the mobile layout');
+	await open(page);
+	await expect(page.locator('[data-manifesto]')).toHaveCSS('opacity', '0');
+
+	const story = (await page.locator('.story').boundingBox())!;
+	const footer = (await page.locator('footer').boundingBox())!;
+	const viewport = page.viewportSize()!;
+	expect(story.width / story.height).toBeCloseTo(9 / 16, 2);
+	expect(story.x).toBeGreaterThanOrEqual(15);
+	expect(story.y + story.height).toBeLessThanOrEqual(footer.y);
+	expect(footer.y + footer.height).toBeLessThanOrEqual(viewport.height);
 });
 
 test('has a centered footer with the Ko-fi link', async ({ page }) => {

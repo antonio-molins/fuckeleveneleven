@@ -27,6 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `reject(wish, els)` resolves to the rejection message.
   - `pickSabotages()` picks a random 1–3, and never `flee` under `prefers-reduced-motion`.
 - `src/components/WishForm.astro`: on every submit it always rejects, then re-rolls the sabotages. It exposes `data-sabotage` (active ids) and `data-attempts` (incremented once a submit fully settles) for e2e tests to wait on.
+- Layout: `.stage` is a size container filling the space above the footer. `.story` is a 9:16 box whose width (`--story-w`) comes from the stage's `cqw`/`cqh`, and its `font-size` is a fraction of that width. Size everything inside the story in `em`, not `rem`/`vw`, so it scales like a screenshot. The paywall `<dialog>` sits inside the story in the DOM, so it resets `font-size` to rem.
 - Visual concept: a pastel influencer Instagram story (Cormorant Garamond italic), vandalised in Permanent Marker. Fonts are self-hosted through `@fontsource`; don't add external font or CDN requests. Tokens are at the top of `src/styles/global.css`.
 
 ## Gotchas

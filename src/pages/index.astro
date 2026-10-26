@@ -22,7 +22,7 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 		<script is:inline>
 			// Decide before first paint, so the story never flashes before the mobile intro.
 			// Must come after the viewport meta: until then mobile browsers report a ~980px layout width.
-			if (matchMedia('not all and (min-width: 60rem)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			if (matchMedia('not all and (min-width: 60rem)').matches) {
 				document.documentElement.classList.add('intro');
 			}
 		</script>
@@ -79,14 +79,18 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 
 		<script>
 			// Mobile intro: the manifesto writes itself out, then the story slides up over it. Tap to skip.
+			// With reduced motion the text appears at once, holds, and the story replaces it without sliding.
 			const root = document.documentElement;
 			const CHAR_MS = 18;
 			const PARAGRAPH_PAUSE_MS = 260;
 			const HOLD_MS = 700;
+			const REDUCED_MOTION_HOLD_MS = 3000;
 
 			if (root.classList.contains('intro')) {
 				const manifesto = document.querySelector<HTMLElement>('[data-manifesto]')!;
 				const story = document.querySelector<HTMLElement>('.story')!;
+				const text = manifesto.querySelector<HTMLElement>('.manifesto-text')!;
+				const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 				const chars = [...manifesto.querySelectorAll('.manifesto-text p')].flatMap((p) => {
 					const spans = [...(p.textContent ?? '')].map((c) => {
 						const span = document.createElement('span');
@@ -110,18 +114,34 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 					clearTimeout(timer);
 					chars.forEach((c) => c.classList.add('is-on'));
 					root.classList.add('intro-landing');
+					if (reducedMotion) return finish();
 					story.addEventListener('transitionend', (e) => e.target === story && finish());
 					timer = window.setTimeout(finish, 1500); // in case transitionend never fires
 				};
-				const write = () => {
-					const char = chars[next++];
-					char.classList.add('is-on');
-					if (next === chars.length) timer = window.setTimeout(land, HOLD_MS);
-					else timer = window.setTimeout(write, 'pause' in char.dataset ? PARAGRAPH_PAUSE_MS : CHAR_MS);
+				// Reveal against elapsed time rather than chained timers, so a busy phone doesn't slow the writing.
+				const revealAt: number[] = [];
+				let at = 0;
+				for (const char of chars) {
+					revealAt.push(at);
+					at += 'pause' in char.dataset ? PARAGRAPH_PAUSE_MS : CHAR_MS;
+				}
+				let start = 0;
+				const write = (now: number) => {
+					if (landed) return;
+					start ||= now;
+					while (next < chars.length && revealAt[next] <= now - start) chars[next++].classList.add('is-on');
+					if (next < chars.length) requestAnimationFrame(write);
+					else timer = window.setTimeout(land, HOLD_MS);
 				};
 
 				manifesto.addEventListener('click', land);
-				write();
+				text.classList.add('is-typing');
+				if (reducedMotion) {
+					chars.forEach((c) => c.classList.add('is-on'));
+					timer = window.setTimeout(land, REDUCED_MOTION_HOLD_MS);
+				} else {
+					requestAnimationFrame(write);
+				}
 			}
 		</script>
 	</body>
