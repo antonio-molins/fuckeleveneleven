@@ -216,22 +216,9 @@ input {
 	fill: var(--spray);
 }
 
-.hero-strike-pen {
-	fill: none;
-	stroke: #fff;
-	stroke-width: 24;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-}
-
 @media (prefers-reduced-motion: no-preference) {
 	.hero-fuck {
 		animation: scrawl 0.45s 0.6s steps(6, end) both;
-	}
-
-	.hero-strike-pen {
-		stroke-dasharray: 1;
-		animation: strike 0.85s 1.05s cubic-bezier(0.45, 0, 0.75, 1) both;
 	}
 
 	@keyframes scrawl {
@@ -240,16 +227,6 @@ input {
 		}
 		to {
 			clip-path: inset(0 0 0 0);
-		}
-	}
-
-	/* A brush accelerates through a zig-zag: start deliberate, finish in a rush. */
-	@keyframes strike {
-		from {
-			stroke-dashoffset: 1;
-		}
-		to {
-			stroke-dashoffset: 0;
 		}
 	}
 }

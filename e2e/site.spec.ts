@@ -215,6 +215,35 @@ test('the fleeing button comes back when you go back to the wish box', async ({ 
 	await expect.poll(() => submit.evaluate((el) => el.style.transform)).toBe('');
 });
 
+test('the fleeing button lets you catch it on the third try, then denies the wish anyway', async ({ page }) => {
+	await open(page);
+	for (let i = 0; i < 40 && !(await activeSabotages(page)).includes('flee'); i++) await submitWish(page, 'x');
+	test.skip(!(await activeSabotages(page)).includes('flee'), 'never rolled "flee"');
+
+	await page.locator('[data-wish-input]').fill('a pony');
+	const submit = page.locator('[data-wish-submit]');
+	const centre = async () => {
+		const b = (await submit.boundingBox())!;
+		return [b.x + b.width / 2, b.y + b.height / 2] as const;
+	};
+	for (let dodge = 1; dodge <= 2; dodge++) {
+		const [x, y] = await centre();
+		await page.mouse.move(x, y);
+		await expect(page.locator('[data-wish-form]')).toHaveAttribute('data-dodges', String(dodge));
+		await page.waitForTimeout(250); // let it finish running
+	}
+
+	const [x, y] = await centre();
+	await page.mouse.move(x, y);
+	await page.waitForTimeout(250);
+	expect(await centre()).toEqual([x, y]); // too tired to run
+	await page.mouse.click(x, y);
+
+	const paywall = page.locator('[data-paywall]');
+	if (await paywall.evaluate((d: HTMLDialogElement) => d.open)) await paywall.getByRole('button', { name: 'Keep my wish small' }).click();
+	await expect(page.locator('[data-wish-status]')).toHaveText(/Caught it|cornered the button|Nice sprint/);
+});
+
 test('the icon-only send button still has a name', async ({ page }) => {
 	await open(page);
 	await expect(page.getByRole('button', { name: 'Send wish' })).toBeVisible();

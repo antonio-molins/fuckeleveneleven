@@ -165,8 +165,10 @@ import { KOFI_URL } from '../lib/links';
 		}
 
 		busy = true;
+		// If the button was running away, the chase gets the last word.
 		const rejecters = active.filter((s) => s.reject);
-		status.textContent = rejecters.length ? await pick(rejecters).reject!(wish, els) : pick(GENERIC_REJECTIONS);
+		const rejecter = active.find((s) => s.id === 'flee') ?? (rejecters.length ? pick(rejecters) : null);
+		status.textContent = rejecter ? await rejecter.reject!(wish, els) : pick(GENERIC_REJECTIONS);
 		els.input.value = '';
 		arm();
 		els.form.dataset.attempts = String(++attempts);

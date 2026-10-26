@@ -1,14 +1,28 @@
 import type { Sabotage } from './types';
 
 const PANIC_RADIUS_PX = 90;
+/** How many times it gets away before it lets you catch it. */
+export const DODGES = 2;
 
-// The submit button refuses to be pressed: it runs from the cursor, a tap or keyboard focus.
-// It sneaks back next to the wish box whenever you go back to typing, ready to run again.
+export const CAUGHT_MESSAGES = [
+	'Caught it! Two laps around the story and the universe still says no. Great cardio, though.',
+	'You cornered the button. Shame the wish was never in the button.',
+	'Third time’s the charm? Not for wishes. Nice sprint, though.',
+];
+export const SKIPPED_CHASE_MESSAGE = 'Skipping the chase? The universe only rewards hustle. Denied.';
+
+// The submit button refuses to be pressed: it runs from the cursor, a tap or keyboard focus, twice,
+// then gives up and lets you press it (the wish fails anyway). It sneaks back next to the wish box
+// whenever you go back to typing.
 export const flee: Sabotage = {
 	id: 'flee',
 	attach({ form, input, submit }) {
+		form.dataset.dodges = '0';
 		const arena = form.closest<HTMLElement>('[data-flee-area]') ?? form;
 		const run = () => {
+			const dodges = Number(form.dataset.dodges);
+			if (dodges >= DODGES) return; // out of breath: you can catch it now
+			form.dataset.dodges = String(dodges + 1);
 			const area = arena.getBoundingClientRect();
 			const button = submit.getBoundingClientRect();
 			const maxX = Math.max(0, area.width - button.width);
@@ -34,6 +48,7 @@ export const flee: Sabotage = {
 			if (Math.hypot(dx, dy) < PANIC_RADIUS_PX) run();
 		};
 		const onTouch = (event: Event) => {
+			if (Number(form.dataset.dodges) >= DODGES) return; // let the tap through
 			event.preventDefault();
 			run();
 		};
@@ -50,7 +65,12 @@ export const flee: Sabotage = {
 			submit.removeEventListener('focus', run);
 			submit.removeEventListener('touchstart', onTouch);
 			submit.style.transform = '';
+			delete form.dataset.dodges;
 		};
+	},
+	async reject(_wish, { form }) {
+		if (Number(form.dataset.dodges) < DODGES) return SKIPPED_CHASE_MESSAGE;
+		return CAUGHT_MESSAGES[Math.floor(Math.random() * CAUGHT_MESSAGES.length)];
 	},
 };
 

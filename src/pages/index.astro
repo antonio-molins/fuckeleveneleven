@@ -9,7 +9,7 @@ import '@fontsource/permanent-marker/400.css';
 import '../styles/global.css';
 import Countdown from '../components/Countdown.astro';
 import WishForm from '../components/WishForm.astro';
-import { brushZigzag, SCRIBBLE_HEIGHT, SCRIBBLE_WIDTH } from '../lib/scribble';
+import { inkPath, penPoints, SCRIBBLE_HEIGHT, SCRIBBLE_WIDTH } from '../lib/scribble';
 import cormorant300Italic from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-300-italic.woff2?url';
 import cormorant400 from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff2?url';
 import cormorant400Italic from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-italic.woff2?url';
@@ -18,7 +18,7 @@ import marker from '@fontsource/permanent-marker/files/permanent-marker-latin-40
 // The faces on screen at first paint: fetched early, and the page stays hidden until they're in.
 const criticalFonts = [cormorant300Italic, cormorant400, cormorant400Italic, marker];
 
-const strike = brushZigzag();
+const strikeInk = inkPath(penPoints());
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const description = 'The next 11:11 on Earth, a countdown to it, and a wish box that will not take your wish.';
 ---
@@ -63,23 +63,18 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 					<span class="hero-wish" aria-hidden="true">
 						make a wish ✨
 						<!--
-							A build-time dry-brush zig-zag (src/lib/scribble.ts): a core plus bristles of variable-width ink,
-							roughened by a noise filter, revealed by an invisible pen that draws along it inside a mask.
+							A crayon strike-through (src/lib/scribble.ts). Rendered finished here; the script below
+							redraws it live, one pen position per frame, so it races mid-pass and slows into each turn.
 						-->
 						<svg class="hero-strike" viewBox={`0 0 ${SCRIBBLE_WIDTH} ${SCRIBBLE_HEIGHT}`} aria-hidden="true">
-							<filter id="brush-rough" x="-5%" y="-20%" width="110%" height="140%">
-								<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="11" />
-								<feDisplacementMap in="SourceGraphic" scale="1.8" />
+							<filter id="crayon" x="-5%" y="-30%" width="110%" height="160%">
+								<feTurbulence type="fractalNoise" baseFrequency="1.3" numOctaves="1" seed="7" result="grain" />
+								<feColorMatrix in="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3 0 0 0 -0.55" result="holes" />
+								<feComposite in="SourceGraphic" in2="holes" operator="in" result="grainy" />
+								<feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="3" result="warp" />
+								<feDisplacementMap in="grainy" in2="warp" scale="1.2" />
 							</filter>
-							<mask id="strike-reveal" maskUnits="userSpaceOnUse" x="-20" y="-20" width={SCRIBBLE_WIDTH + 40} height={SCRIBBLE_HEIGHT + 40}>
-								<path class="hero-strike-pen" pathLength="1" d={strike.pen} />
-							</mask>
-							<g class="hero-strike-ink" mask="url(#strike-reveal)">
-								<g filter="url(#brush-rough)">
-									{strike.ink.map((d) => <path d={d} />)}
-									{strike.specks.map(([cx, cy, r]) => <circle cx={cx} cy={cy} r={r} />)}
-								</g>
-							</g>
+							<path class="hero-strike-ink" d={strikeInk} filter="url(#crayon)" data-strike />
 						</svg>
 					</span>
 					<span class="hero-fuck" aria-hidden="true">fuck</span>
@@ -116,6 +111,43 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 		</script>
 
 		<script>
+			// Draws the strike-through live: one pen position per frame, after the FUCK scrawl.
+			import { inkPath, penPoints } from '../lib/scribble';
+
+			const START_DELAY_MS = 1050;
+			const DRAW_MS = 1300;
+			const ink = document.querySelector<SVGPathElement>('[data-strike]')!;
+			const done = () => document.dispatchEvent(new Event('strike:done'));
+
+			if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+				done();
+			} else {
+				const points = penPoints();
+				const finished = ink.getAttribute('d')!;
+				ink.setAttribute('d', '');
+				// Start counting once the page is revealed (it stays hidden while the fonts load).
+				const whenVisible = new Promise<void>((resolve) => {
+					const check = () => (document.documentElement.classList.contains('fonts-loading') ? requestAnimationFrame(check) : resolve());
+					check();
+				});
+				whenVisible.then(() => {
+					let start = 0;
+					const frame = (now: number) => {
+						start ||= now + START_DELAY_MS;
+						const t = (now - start) / DRAW_MS;
+						if (t >= 1) {
+							ink.setAttribute('d', finished);
+							return done();
+						}
+						if (t > 0) ink.setAttribute('d', inkPath(points, Math.ceil(t * points.length)));
+						requestAnimationFrame(frame);
+					};
+					requestAnimationFrame(frame);
+				});
+			}
+		</script>
+
+		<script>
 			// Mobile intro, see the matching block in global.css. Tap anywhere to skip.
 			// With reduced motion the text appears at once, holds, and the phone replaces it without fading.
 			const root = document.documentElement;
@@ -130,7 +162,6 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 				const manifesto = document.querySelector<HTMLElement>('[data-manifesto]')!;
 				const story = document.querySelector<HTMLElement>('.story')!;
 				const hero = document.querySelector<HTMLElement>('.hero')!;
-				const strike = document.querySelector('.hero-strike-pen')!;
 				const text = manifesto.querySelector<HTMLElement>('.manifesto-text')!;
 				const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 				const chars = [...manifesto.querySelectorAll('.manifesto-text p')].flatMap((p) => {
@@ -214,9 +245,9 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 				if (reducedMotion) {
 					begin();
 				} else {
-					// The text starts once the strike-through has finished drawing.
-					strike.addEventListener('animationend', begin, { once: true });
-					timer = window.setTimeout(begin, 2500);
+					// The text starts once the strike-through has finished drawing (see the strike script).
+					document.addEventListener('strike:done', begin, { once: true });
+					timer = window.setTimeout(begin, 4000);
 				}
 			}
 		</script>

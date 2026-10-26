@@ -1,42 +1,43 @@
 import { describe, expect, it } from 'vitest';
-import { brushZigzag, penPoints, SCRIBBLE_HEIGHT, SCRIBBLE_WIDTH } from '../src/lib/scribble';
+import { inkPath, penPoints, SCRIBBLE_HEIGHT, SCRIBBLE_WIDTH } from '../src/lib/scribble';
 
-describe('brushZigzag', () => {
+describe('crayon strike-through', () => {
 	it('is identical on every build', () => {
-		expect(brushZigzag()).toEqual(brushZigzag());
+		expect(penPoints()).toEqual(penPoints());
+		expect(inkPath(penPoints())).toEqual(inkPath(penPoints()));
 	});
 
-	it('produces a core plus bristles, all closed outlines, and a pen path', () => {
-		const { ink, pen } = brushZigzag();
-		expect(ink.length).toBeGreaterThan(5);
-		for (const d of ink) {
+	it('draws a closed ink outline, partial or complete', () => {
+		const points = penPoints();
+		for (const d of [inkPath(points, 10), inkPath(points)]) {
 			expect(d.startsWith('M')).toBe(true);
 			expect(d.endsWith('Z')).toBe(true);
 		}
-		expect(pen.startsWith('M')).toBe(true);
 	});
 
-	it('keeps the brush and its specks inside the drawing area', () => {
-		const inside = ([x, y]: number[]) =>
-			x >= 0 && x <= SCRIBBLE_WIDTH && y >= 0 && y <= SCRIBBLE_HEIGHT;
-		expect(penPoints().every(inside)).toBe(true);
-		expect(brushZigzag().specks.every(inside)).toBe(true);
-	});
-
-	it('zig-zags: the pen alternates between climbing and falling', () => {
-		const points = penPoints();
-		let turns = 0;
-		for (let i = 2; i < points.length; i++) {
-			const before = points[i - 1][1] - points[i - 2][1];
-			const after = points[i][1] - points[i - 1][1];
-			if (before * after < 0) turns++;
+	it('keeps the pen inside the drawing area', () => {
+		for (const [x, y] of penPoints()) {
+			expect(x).toBeGreaterThanOrEqual(0);
+			expect(x).toBeLessThanOrEqual(SCRIBBLE_WIDTH);
+			expect(y).toBeGreaterThanOrEqual(0);
+			expect(y).toBeLessThanOrEqual(SCRIBBLE_HEIGHT);
 		}
-		expect(turns).toBeGreaterThanOrEqual(6);
 	});
 
-	it('slows into the corners, so the ink pools there', () => {
+	it('is one stroke that goes right, back left, then right again', () => {
+		const points = penPoints();
+		let reversals = 0;
+		for (let i = 2; i < points.length; i++) {
+			const before = points[i - 1][0] - points[i - 2][0];
+			const after = points[i][0] - points[i - 1][0];
+			if (before * after < 0) reversals++;
+		}
+		expect(reversals).toBe(2);
+	});
+
+	it('moves fast mid-pass and slow at the turns', () => {
 		const points = penPoints();
 		const gaps = points.slice(1).map(([x, y], i) => Math.hypot(x - points[i][0], y - points[i][1]));
-		expect(Math.max(...gaps) / Math.min(...gaps)).toBeGreaterThan(5);
+		expect(Math.max(...gaps) / Math.min(...gaps)).toBeGreaterThan(8);
 	});
 });
