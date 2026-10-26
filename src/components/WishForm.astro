@@ -1,0 +1,81 @@
+---
+// The wish box, styled as a story reply bar. It never accepts a wish; see src/lib/sabotage.
+---
+
+<div class="wish">
+	<p class="wish-status" data-wish-status role="status" aria-live="polite"></p>
+	<form class="wish-form" data-wish-form autocomplete="off">
+		<label class="visually-hidden" for="wish">Your wish</label>
+		<input id="wish" name="wish" type="text" maxlength="280" placeholder="Make a wish…" data-wish-input />
+		<button type="submit" class="wish-send" data-wish-submit>Send wish</button>
+	</form>
+	<p class="wish-portal-hint">Wishes are accepted at 11:11:11.111 only.</p>
+</div>
+
+<dialog class="paywall" data-paywall aria-labelledby="paywall-title">
+	<div data-paywall-step="pitch">
+		<p class="paywall-badge">Wish Pro™</p>
+		<h2 id="paywall-title">Your wish is <span data-over-by>0</span> characters over the free tier.</h2>
+		<p>The free tier includes 0 characters. Wish Pro includes priority manifestation, a gratitude journal PDF and 11% off my next course.</p>
+		<p class="paywall-price">$111.11 a month, billed every lunar cycle.</p>
+		<div class="paywall-actions">
+			<button type="button" class="paywall-upgrade" data-paywall-action="upgrade">Upgrade to Wish Pro</button>
+			<button type="button" class="paywall-decline" data-paywall-action="decline">Keep my wish small</button>
+		</div>
+	</div>
+	<div data-paywall-step="sold-out" hidden>
+		<p class="paywall-badge">Wish Pro™</p>
+		<h2>Wish Pro is sold out until Mercury leaves retrograde.</h2>
+		<p>Join the waitlist by thinking about it really hard.</p>
+		<div class="paywall-actions">
+			<button type="button" class="paywall-decline" data-paywall-action="back">Back to wishing</button>
+		</div>
+	</div>
+</dialog>
+
+<script>
+	import { GENERIC_REJECTIONS, pickSabotages, type Cleanup, type Sabotage, type WishElements } from '../lib/sabotage';
+
+	const els: WishElements = {
+		form: document.querySelector('[data-wish-form]')!,
+		input: document.querySelector('[data-wish-input]')!,
+		submit: document.querySelector('[data-wish-submit]')!,
+		paywall: document.querySelector('[data-paywall]')!,
+	};
+	const status = document.querySelector<HTMLElement>('[data-wish-status]')!;
+	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+	const pick = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
+
+	let active: Sabotage[] = [];
+	let cleanups: Cleanup[] = [];
+	let busy = false;
+	let attempts = 0;
+
+	function arm() {
+		cleanups.forEach((cleanup) => cleanup());
+		active = pickSabotages(Math.random, { reducedMotion: reducedMotion.matches });
+		cleanups = active.flatMap((s) => (s.attach ? [s.attach(els)] : []));
+		els.form.dataset.sabotage = active.map((s) => s.id).join(' ');
+	}
+
+	els.form.addEventListener('submit', async (event) => {
+		// Nothing is ever sent anywhere. The wish dies right here, in your browser.
+		event.preventDefault();
+		if (busy) return;
+		const wish = els.input.value.trim();
+		if (!wish) {
+			status.textContent = 'Empty wishes are a premium feature.';
+			return;
+		}
+
+		busy = true;
+		const rejecters = active.filter((s) => s.reject);
+		status.textContent = rejecters.length ? await pick(rejecters).reject!(wish, els) : pick(GENERIC_REJECTIONS);
+		els.input.value = '';
+		arm();
+		els.form.dataset.attempts = String(++attempts);
+		busy = false;
+	});
+
+	arm();
+</script>

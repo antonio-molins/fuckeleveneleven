@@ -1,0 +1,70 @@
+---
+// Live countdown to the next 11:11 anywhere. Rendered empty; the client script fills it in.
+---
+
+<section class="countdown" data-countdown aria-live="off">
+	<p class="countdown-lead" data-countdown-lead>Next 11:11 hits</p>
+	<p class="countdown-city" data-countdown-city>somewhere</p>
+	<p class="countdown-clock" data-countdown-clock aria-label="time left">--:--:--</p>
+	<p class="countdown-jab" data-countdown-jab></p>
+</section>
+
+<script>
+	import { getOffsets, headlineZone, meridiem, nextElevenEleven, prettyZone, type OffsetGroup } from '../lib/elevenEleven';
+
+	const root = document.querySelector<HTMLElement>('[data-countdown]')!;
+	const lead = root.querySelector('[data-countdown-lead]')!;
+	const city = root.querySelector('[data-countdown-city]')!;
+	const clock = root.querySelector('[data-countdown-clock]')!;
+	const jab = root.querySelector('[data-countdown-jab]')!;
+	const progress = document.querySelector<HTMLElement>('[data-story-progress]');
+
+	let groups: OffsetGroup[] = getOffsets(new Date());
+	let lastTarget = 0;
+
+	const pad = (n: number) => String(n).padStart(2, '0');
+	const hms = (ms: number) => {
+		const s = Math.max(0, Math.ceil(ms / 1000));
+		return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
+	};
+
+	function jabFor(others: number): string {
+		if (others === 0) return 'and nowhere else. Just them, alone, wishing.';
+		if (others === 1) return 'and 1 other place your guru has never been to.';
+		return `and ${others} other places your guru has never been to.`;
+	}
+
+	function tick() {
+		const now = Date.now();
+		let next = nextElevenEleven(now, groups);
+		if (next.targetUtcMs !== lastTarget) {
+			// A new 11:11 is up; offsets may have shifted (DST), so regroup before trusting it.
+			groups = getOffsets(new Date(now));
+			next = nextElevenEleven(now, groups);
+			lastTarget = next.targetUtcMs;
+		}
+
+		const zone = headlineZone(next.groups);
+		const offset = next.groups.find((g) => g.zones.includes(zone))!.offsetMinutes;
+		const others = next.groups.reduce((n, g) => n + g.zones.length, 0) - 1;
+
+		city.textContent = prettyZone(zone);
+		document.body.classList.toggle('is-now', next.isNow);
+
+		if (next.isNow) {
+			lead.textContent = `It’s 11:11 ${meridiem(next.targetUtcMs, offset)} right now in`;
+			clock.textContent = hms(next.targetUtcMs + 60_000 - now).slice(3);
+			jab.textContent = 'Wish. Now. Go. The portal closes when that hits zero.';
+			progress?.style.setProperty('--progress', '1');
+		} else {
+			lead.textContent = `Next 11:11 ${meridiem(next.targetUtcMs, offset)} hits`;
+			clock.textContent = hms(next.targetUtcMs - now);
+			jab.textContent = jabFor(others);
+			const span = next.targetUtcMs - next.previousUtcMs;
+			progress?.style.setProperty('--progress', String((now - next.previousUtcMs) / span));
+		}
+	}
+
+	tick();
+	setInterval(tick, 250);
+</script>

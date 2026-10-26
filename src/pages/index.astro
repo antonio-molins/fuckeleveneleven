@@ -1,0 +1,67 @@
+---
+import '@fontsource/cormorant-garamond/300-italic.css';
+import '@fontsource/cormorant-garamond/400.css';
+import '@fontsource/cormorant-garamond/400-italic.css';
+import '@fontsource/cormorant-garamond/500.css';
+import '@fontsource/cormorant-garamond/500-italic.css';
+import '@fontsource/cormorant-garamond/600.css';
+import '@fontsource/permanent-marker/400.css';
+import '../styles/global.css';
+import Countdown from '../components/Countdown.astro';
+import WishForm from '../components/WishForm.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const description = 'The next 11:11 on Earth, a countdown to it, and a wish box that will not take your wish.';
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content={description} />
+		<meta property="og:title" content="Fuck 11:11" />
+		<meta property="og:description" content={description} />
+		<meta name="theme-color" content="#2b1734" />
+		<link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+		<meta name="generator" content={Astro.generator} />
+		<title>Fuck 11:11</title>
+	</head>
+	<body>
+		<main class="stage">
+			<article class="story" data-flee-area>
+				<div class="story-progress" data-story-progress><span></span></div>
+				<header class="story-head">
+					<span class="story-avatar" aria-hidden="true">✨</span>
+					<span class="story-handle">manifest.with.luna</span>
+					<span class="story-age">11m</span>
+				</header>
+
+				<h1 class="hero" aria-label="Fuck 11:11">
+					<span class="hero-time" aria-hidden="true">11:11</span>
+					<span class="hero-wish" aria-hidden="true">
+						make a wish ✨
+						<svg class="hero-strike" viewBox="0 0 320 50" preserveAspectRatio="none" aria-hidden="true">
+							<path pathLength="1" d="M4 30 C 40 12, 80 40, 120 20 S 200 38, 240 16 S 296 30, 316 22" />
+						</svg>
+					</span>
+					<span class="hero-fuck" aria-hidden="true">fuck</span>
+				</h1>
+
+				<Countdown />
+				<WishForm />
+			</article>
+
+			<aside class="manifesto">
+				<div class="manifesto-text">
+					<p>11:11 is a time.</p>
+					<p>It happens twice a day, in about forty time zones, forever.</p>
+					<p>Nobody up there is taking requests.</p>
+					<p>Want something? Go get it. Or don’t. Just stop selling it back to us.</p>
+				</div>
+				<p class="manifesto-small">
+					No wishes are stored, sent or read. This site has no server to send them to.
+				</p>
+			</aside>
+		</main>
+	</body>
+</html>

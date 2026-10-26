@@ -1,0 +1,424 @@
+/*
+ * A pastel manifestation story, vandalised.
+ * Serif italic is the influencer's voice; Permanent Marker is ours.
+ */
+:root {
+	--blush: #f7d6e0;
+	--lilac: #c9b6f2;
+	--peach: #ffd6b0;
+	--paper: #fff7f2;
+	--ink: #3a2547;
+	--plum: #2b1734;
+	--marker: #000;
+	--spray: #e0241b;
+
+	--serif: 'Cormorant Garamond', Georgia, serif;
+	--scrawl: 'Permanent Marker', 'Comic Sans MS', cursive;
+
+	color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+	min-height: 100svh;
+	background: var(--plum);
+	color: var(--ink);
+	font-family: var(--serif);
+	font-size: 1.25rem;
+	line-height: 1.45;
+}
+
+p,
+h1,
+h2 {
+	margin: 0;
+}
+
+button,
+input {
+	font: inherit;
+	color: inherit;
+}
+
+:focus-visible {
+	outline: 3px solid var(--marker);
+	outline-offset: 3px;
+}
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* Stage: the story is the phone screen; the manifesto is written on the wall next to it. */
+.stage {
+	display: grid;
+	justify-items: center;
+	gap: 3rem;
+	padding: 1.5rem 1rem 3rem;
+}
+
+@media (min-width: 60rem) {
+	.stage {
+		grid-template-columns: minmax(0, 27.5rem) minmax(0, 24rem);
+		justify-content: center;
+		align-items: center;
+		min-height: 100svh;
+		gap: 5rem;
+	}
+}
+
+/* Story card */
+.story {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	width: 100%;
+	max-width: 27.5rem;
+	min-height: min(52rem, calc(100svh - 3rem));
+	padding: 0.75rem 1.25rem 1.25rem;
+	border-radius: 1.25rem;
+	background: linear-gradient(165deg, var(--lilac), var(--blush) 52%, var(--peach));
+	text-align: center;
+	overflow: hidden;
+}
+
+.story-progress {
+	height: 3px;
+	border-radius: 2px;
+	background: rgb(255 255 255 / 0.45);
+	overflow: hidden;
+}
+
+.story-progress span {
+	display: block;
+	height: 100%;
+	background: #fff;
+	transform-origin: left;
+	transform: scaleX(var(--progress, 0));
+}
+
+.story-head {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	font-size: 1rem;
+	text-align: left;
+}
+
+.story-avatar {
+	display: grid;
+	place-items: center;
+	width: 2rem;
+	height: 2rem;
+	border-radius: 50%;
+	background: var(--paper);
+	box-shadow: 0 0 0 2px var(--peach), 0 0 0 4px var(--lilac);
+	font-size: 0.9rem;
+}
+
+.story-handle {
+	font-weight: 600;
+}
+
+.story-age {
+	opacity: 0.6;
+}
+
+/* Hero: the influencer's caption, defaced. */
+.hero {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	margin-top: 1.5rem;
+	font-weight: 300;
+	font-style: italic;
+	line-height: 0.9;
+}
+
+.hero-time {
+	font-size: clamp(6rem, 30vw, 9rem);
+	letter-spacing: -0.03em;
+	font-variant-numeric: lining-nums;
+}
+
+.hero-wish {
+	position: relative;
+	font-size: clamp(1.75rem, 8vw, 2.25rem);
+	font-weight: 400;
+}
+
+.hero-fuck {
+	position: absolute;
+	top: -0.35em;
+	left: -0.05em;
+	font-family: var(--scrawl);
+	font-style: normal;
+	font-weight: 400;
+	font-size: clamp(3.25rem, 16vw, 4.75rem);
+	color: var(--marker);
+	transform: rotate(-12deg);
+	line-height: 1;
+}
+
+.hero-strike {
+	position: absolute;
+	inset: 15% -6% auto;
+	width: 112%;
+	height: 70%;
+	overflow: visible;
+	fill: none;
+	stroke: var(--spray);
+	stroke-width: 7;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.hero-fuck {
+		animation: scrawl 0.45s 0.6s steps(6, end) both;
+	}
+
+	.hero-strike path {
+		stroke-dasharray: 1;
+		animation: strike 0.5s 1.1s ease-in both;
+	}
+
+	@keyframes scrawl {
+		from {
+			clip-path: inset(0 100% 0 0);
+		}
+		to {
+			clip-path: inset(0 0 0 0);
+		}
+	}
+
+	@keyframes strike {
+		from {
+			stroke-dashoffset: 1;
+		}
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+}
+
+/* Countdown */
+.countdown {
+	display: grid;
+	gap: 0.15rem;
+	margin-block: auto;
+}
+
+.countdown-lead {
+	font-style: italic;
+}
+
+.countdown-city {
+	font-size: 2.25rem;
+	font-weight: 500;
+	line-height: 1.1;
+}
+
+.countdown-clock {
+	font-size: 3.25rem;
+	font-weight: 300;
+	font-variant-numeric: lining-nums tabular-nums;
+	line-height: 1.1;
+}
+
+.countdown-jab {
+	max-width: 22rem;
+	margin: 0.4rem auto 0;
+	font-family: var(--scrawl);
+	font-size: 1.05rem;
+	line-height: 1.35;
+	color: var(--marker);
+	transform: rotate(-1.5deg);
+}
+
+.is-now .countdown-clock {
+	color: var(--spray);
+	font-weight: 500;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.is-now .story {
+		animation: portal 1.1s ease-in-out infinite alternate;
+	}
+
+	@keyframes portal {
+		to {
+			box-shadow: 0 0 0 6px var(--peach), 0 0 3rem 0.5rem var(--lilac);
+		}
+	}
+}
+
+/* Wish box, styled as a story reply bar */
+.wish {
+	display: grid;
+	gap: 0.6rem;
+}
+
+.wish-status {
+	min-height: 1.45em;
+	font-style: italic;
+	font-weight: 500;
+}
+
+.wish-status:not(:empty) {
+	padding: 0.6rem 0.9rem;
+	border-radius: 0.9rem;
+	background: rgb(255 255 255 / 0.6);
+}
+
+.wish-form {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.wish-form input {
+	flex: 1;
+	min-width: 0;
+	padding: 0.7rem 1.1rem;
+	border: 1.5px solid rgb(58 37 71 / 0.55);
+	border-radius: 999px;
+	background: rgb(255 255 255 / 0.35);
+	font-size: 1.15rem;
+}
+
+.wish-form input::placeholder {
+	color: rgb(58 37 71 / 0.7);
+	font-style: italic;
+}
+
+.wish-send {
+	position: relative;
+	z-index: 2;
+	padding: 0.7rem 1.1rem;
+	border: 0;
+	border-radius: 999px;
+	background: var(--ink);
+	color: var(--paper);
+	font-weight: 600;
+	cursor: pointer;
+	transition: transform 0.16s ease-out;
+}
+
+.wish-form.is-portal .wish-send {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.wish-portal-hint {
+	display: none;
+	font-size: 1rem;
+	font-style: italic;
+}
+
+.wish-form.is-portal ~ .wish-portal-hint {
+	display: block;
+}
+
+/* Paywall */
+.paywall {
+	max-width: min(24rem, calc(100vw - 2rem));
+	padding: 1.75rem 1.5rem 1.5rem;
+	border: 0;
+	border-radius: 1.5rem;
+	background: var(--paper);
+	color: var(--ink);
+	text-align: center;
+}
+
+.paywall::backdrop {
+	background: rgb(43 23 52 / 0.7);
+}
+
+.paywall > div {
+	display: grid;
+	gap: 0.8rem;
+}
+
+.paywall h2 {
+	font-size: 1.75rem;
+	font-weight: 500;
+	line-height: 1.15;
+}
+
+.paywall-badge {
+	justify-self: center;
+	padding: 0.15rem 0.8rem;
+	border-radius: 999px;
+	background: linear-gradient(90deg, var(--lilac), var(--peach));
+	font-weight: 600;
+}
+
+.paywall-price {
+	font-style: italic;
+}
+
+.paywall-actions {
+	display: grid;
+	gap: 0.4rem;
+	margin-top: 0.4rem;
+}
+
+.paywall-upgrade,
+.paywall-decline {
+	padding: 0.7rem 1rem;
+	border: 0;
+	border-radius: 999px;
+	cursor: pointer;
+}
+
+.paywall-upgrade {
+	background: var(--ink);
+	color: var(--paper);
+	font-weight: 600;
+}
+
+.paywall-decline {
+	background: none;
+	text-decoration: underline;
+}
+
+/* Manifesto, written on the wall */
+.manifesto {
+	display: grid;
+	gap: 1.75rem;
+	max-width: 24rem;
+	color: var(--blush);
+}
+
+.manifesto-text {
+	font-family: var(--scrawl);
+	font-size: clamp(1.5rem, 6vw, 1.9rem);
+	line-height: 1.3;
+	transform: rotate(-2deg);
+}
+
+.manifesto-text p + p {
+	margin-top: 0.8em;
+}
+
+.manifesto-small {
+	font-size: 1.05rem;
+	font-style: italic;
+	color: var(--lilac);
+}
