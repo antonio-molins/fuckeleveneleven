@@ -5,8 +5,10 @@
 <section class="countdown" data-countdown aria-live="off">
 	<p class="countdown-lead" data-countdown-lead>Next 11:11 hits</p>
 	<p class="countdown-city" data-countdown-city>somewhere</p>
-	<p class="countdown-local" data-countdown-local></p>
-	<p class="countdown-clock" data-countdown-clock aria-label="time left">--:--:--</p>
+	<p class="countdown-clock">
+		<span class="countdown-prep" data-countdown-prep>in</span>
+		<span data-countdown-clock aria-label="time left">--:--:--</span>
+	</p>
 	<p class="countdown-jab" data-countdown-jab></p>
 </section>
 
@@ -28,7 +30,7 @@
 	const root = document.querySelector<HTMLElement>('[data-countdown]')!;
 	const lead = root.querySelector('[data-countdown-lead]')!;
 	const city = root.querySelector('[data-countdown-city]')!;
-	const local = root.querySelector('[data-countdown-local]')!;
+	const prep = root.querySelector('[data-countdown-prep]')!;
 	const clock = root.querySelector('[data-countdown-clock]')!;
 	const jab = root.querySelector('[data-countdown-jab]')!;
 	const progress = document.querySelector<HTMLElement>('[data-story-progress]');
@@ -38,7 +40,6 @@
 
 	let groups: OffsetGroup[] = getOffsets(new Date());
 	let lastTarget = 0;
-	let localTime: Intl.DateTimeFormat | null = null;
 	let otherCities = 0;
 	let countUp = 0;
 
@@ -99,24 +100,24 @@
 
 			const zone = headlineZone(next.groups);
 			city.textContent = prettyZone(zone);
-			localTime = new Intl.DateTimeFormat('en-US', { timeZone: zone, hour: 'numeric', minute: '2-digit' });
 			otherCities = Math.max(0, citiesIn(next.groups, cities) - 1);
 			if (!next.isNow) animateCities();
 		}
 
 		const zone = headlineZone(next.groups);
 		const offset = next.groups.find((g) => g.zones.includes(zone))!.offsetMinutes;
-		local.textContent = `It’s ${localTime!.format(now).toLowerCase()} there.`;
 		document.body.classList.toggle('is-now', next.isNow);
 
 		if (next.isNow) {
 			cancelAnimationFrame(countUp);
 			lead.textContent = `It’s 11:11 ${meridiem(next.targetUtcMs, offset)} right now in`;
+			prep.textContent = 'for';
 			clock.textContent = hms(next.targetUtcMs + 60_000 - now).slice(3);
 			jab.textContent = 'Wish. Now. Go. The portal closes when that hits zero.';
 			progress?.style.setProperty('--progress', '1');
 		} else {
 			lead.textContent = `Next 11:11 ${meridiem(next.targetUtcMs, offset)} hits`;
+			prep.textContent = 'in';
 			clock.textContent = hms(next.targetUtcMs - now);
 			const span = next.targetUtcMs - next.previousUtcMs;
 			progress?.style.setProperty('--progress', String((now - next.previousUtcMs) / span));

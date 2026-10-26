@@ -49,7 +49,7 @@ test('counts down to the next 11:11 somewhere', async ({ page }) => {
 	await expect(page.locator('[data-countdown-city]')).toHaveText('Kathmandu');
 	await expect(clock).toHaveText('00:14:00');
 
-	await expect(page.locator('[data-countdown-local]')).toHaveText('It’s 10:57 am there.');
+	await expect(page.locator('[data-countdown-prep]')).toHaveText('in');
 
 	// The city count reserves its final width from the first frame, then counts up over ~2s.
 	const count = page.locator('.jab-count');
@@ -76,6 +76,7 @@ test('shows the portal state during an 11:11 minute', async ({ page }) => {
 	await expect(page.locator('[data-countdown-lead]')).toHaveText('It’s 11:11 am right now in');
 	await expect(page.locator('[data-countdown-city]')).toHaveText('Kathmandu');
 	await expect(page.locator('[data-countdown-clock]')).toHaveText('00:40');
+	await expect(page.locator('[data-countdown-prep]')).toHaveText('for');
 });
 
 test('never accepts a wish, whatever sabotage is active', async ({ page }) => {
