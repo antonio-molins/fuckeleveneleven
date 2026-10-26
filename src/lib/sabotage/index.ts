@@ -15,9 +15,15 @@ export const GENERIC_REJECTIONS = [
 	'Your wish has been added to the waitlist. You are number 11,111.',
 ];
 
-/** A random set of 1–2 sabotages, each equally likely. Fleeing is skipped for reduced motion. */
-export function pickSabotages(rng: () => number = Math.random, { reducedMotion = false } = {}): Sabotage[] {
-	const pool = ALL_SABOTAGES.filter((s) => !(reducedMotion && s.id === 'flee'));
+/**
+ * A random set of 1–2 sabotages, each equally likely. Fleeing is skipped for reduced motion, and right
+ * after a round that had it (`justFled`), so a chase is never followed by another.
+ */
+export function pickSabotages(
+	rng: () => number = Math.random,
+	{ reducedMotion = false, justFled = false } = {},
+): Sabotage[] {
+	const pool = ALL_SABOTAGES.filter((s) => !((reducedMotion || justFled) && s.id === 'flee'));
 	for (let i = pool.length - 1; i > 0; i--) {
 		const j = Math.floor(rng() * (i + 1));
 		[pool[i], pool[j]] = [pool[j], pool[i]];

@@ -7,6 +7,7 @@ import {
 	indexCityCounts,
 	listZones,
 	meridiem,
+	nearestPortal,
 	nextElevenEleven,
 	parseOffset,
 	prettyZone,
@@ -151,5 +152,40 @@ describe('city counts', () => {
 	it('ignores zones the engine does not know', () => {
 		expect(canonicalZone('Mars/Olympus_Mons')).toBeNull();
 		expect(indexCityCounts({ 'Mars/Olympus_Mons': 3 }).size).toBe(0);
+	});
+});
+
+describe('nearestPortal', () => {
+	const kathmandu: OffsetGroup = { offsetMinutes: 345, zones: ['Asia/Kathmandu'] };
+	const london: OffsetGroup = { offsetMinutes: 0, zones: ['Europe/London'] };
+	const tokyo: OffsetGroup = { offsetMinutes: 540, zones: ['Asia/Tokyo'] };
+
+	it('says how long ago it passed, to the millisecond', () => {
+		// 11:11:11.111 in London, plus 2.345s.
+		const nearest = nearestPortal(utc('2026-10-26T11:11:13.456'), [london, kathmandu]);
+		expect(nearest.groups).toEqual([london]);
+		expect(nearest.offByMs).toBe(2345);
+	});
+
+	it('is negative when the nearest one is still coming', () => {
+		// 05:26:11.111 UTC is 11:11:11.111 in Kathmandu.
+		const nearest = nearestPortal(utc('2026-10-26T05:26:10.000'), [london, kathmandu]);
+		expect(nearest.groups).toEqual([kathmandu]);
+		expect(nearest.offByMs).toBe(-1111);
+	});
+
+	it('counts 23:11:11.111 too, and wraps past midnight', () => {
+		// 23:11:11.111 in London, 0.5s late, on a different UTC day from the morning one.
+		expect(nearestPortal(utc('2026-10-26T23:11:11.611'), [london]).offByMs).toBe(500);
+		// 00:00 UTC: the nearest London portal is 23:11:11.111 the evening before.
+		expect(nearestPortal(utc('2026-10-27T00:00:00.000'), [london]).offByMs).toBe(48 * MIN + 48_889);
+	});
+
+	it('merges groups whose portal is the same instant', () => {
+		const utcMinus11: OffsetGroup = { offsetMinutes: -660, zones: ['Pacific/Niue'] };
+		const utcPlus1: OffsetGroup = { offsetMinutes: 60, zones: ['Europe/Paris'] };
+		const nearest = nearestPortal(utc('2026-10-26T10:11:12.111'), [utcMinus11, utcPlus1, tokyo]);
+		expect(nearest.groups).toEqual([utcMinus11, utcPlus1]);
+		expect(nearest.offByMs).toBe(1000);
 	});
 });

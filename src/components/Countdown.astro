@@ -24,7 +24,7 @@
 		type OffsetGroup,
 	} from '../lib/elevenEleven';
 
-	const COUNT_UP_MS = 2000;
+	const COUNT_UP_MS = 5000;
 
 	const root = document.querySelector<HTMLElement>('[data-countdown]')!;
 	const lead = root.querySelector('[data-countdown-lead]')!;
@@ -51,7 +51,7 @@
 	const format = (n: number) => n.toLocaleString('en-US');
 
 	// Counts the cities up from zero, in a slot already as wide as the final number so nothing shifts.
-	// On the mobile intro it waits until the phone fades in.
+	// It waits until the jab can be read: after the mobile intro's phone fades in, or the desktop reveal's fade.
 	function animateCities() {
 		cancelAnimationFrame(countUp);
 		const total = otherCities;
@@ -77,7 +77,11 @@
 		shown.textContent = '0';
 		let start = 0;
 		const step = (now: number) => {
-			if (!(html.classList.contains('intro') && !html.classList.contains('intro-landing'))) {
+			const hidden =
+				html.classList.contains('reveal') ||
+				(html.classList.contains('intro') && !html.classList.contains('intro-landing')) ||
+				getComputedStyle(jab).opacity !== '1';
+			if (!hidden) {
 				start ||= now;
 				const t = Math.min(1, (now - start) / COUNT_UP_MS);
 				shown.textContent = format(Math.round(total * (1 - (1 - t) ** 2)));

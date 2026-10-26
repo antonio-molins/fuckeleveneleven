@@ -30,12 +30,14 @@ async function submitWish(page: Page, wish: string, paywallChoice: 'upgrade' | '
 	await expect(form).toHaveAttribute('data-attempts', String(attempts + 1));
 }
 
-/** Opens the site and, on mobile, taps through the intro so the story is usable. */
+/** Opens the site and taps through the mobile intro or the desktop reveal, so the whole story shows. */
 async function open(page: Page) {
 	await page.goto('./');
-	if (await page.locator('html.intro').count()) {
+	if (await page.locator('html.intro, html.reveal').count()) {
 		await page.mouse.click(5, 5); // a tap anywhere skips
-		await expect(page.locator('html')).not.toHaveClass(/intro/);
+		await expect(page.locator('html')).not.toHaveClass(/\b(intro|reveal)\b/);
+		// On desktop the phone then slides over to its spot; wait so positions are stable.
+		await expect.poll(() => page.locator('.story').evaluate((el) => getComputedStyle(el).transform)).toBe('none');
 	}
 }
 
@@ -111,9 +113,12 @@ test('rewrites the wish into influencer slop while typing', async ({ page }) => 
 	expect([...value]).toHaveLength('i want a pony'.length);
 });
 
-test('offers Ko-fi only once a wish has been denied', async ({ page }) => {
+test('Ko-fi lives in the footer, and a denied wish points down to it', async ({ page }) => {
 	await open(page);
-	await expect(page.locator('a[href*="ko-fi.com"]:visible')).toHaveCount(0);
+	const kofi = page.locator('a[href*="ko-fi.com"]');
+	await expect(kofi).toHaveCount(1);
+	await expect(page.locator('.site-footer').getByRole('link', { name: /Ko-fi/ })).toHaveAttribute('href', 'https://ko-fi.com/lesselevens');
+	await expect(kofi).toBeVisible();
 
 	const open_ = page.locator('[data-tip-open]');
 	const denied = page.locator('[data-tip-denied]');
@@ -122,8 +127,9 @@ test('offers Ko-fi only once a wish has been denied', async ({ page }) => {
 	await submitWish(page, 'a pony');
 	await expect(open_).toBeHidden();
 	await expect(denied).toBeVisible();
-	await expect(denied.getByRole('link')).toHaveAttribute('href', 'https://ko-fi.com/lesselevens');
-	await expect(page.locator('a[href*="ko-fi.com"]')).toHaveCount(1);
+	await expect(denied).toContainText('Ko-fi below');
+	await expect(denied.getByRole('link')).toHaveCount(0);
+	await expect(kofi).toHaveCount(1);
 });
 
 test('mobile intro: hero first, then the text, then the phone fades in around a hero that never moves', async ({
@@ -174,6 +180,52 @@ test('with reduced motion, shows the manifesto at once, then the story without s
 	await expect(page.locator('.story')).toBeInViewport();
 });
 
+test('desktop reveal: the phone starts centred, slides over as the text writes itself out, then the sticker flies in', async ({
+	page,
+}, testInfo) => {
+	test.skip(testInfo.project.name !== 'desktop', 'the reveal only plays on the desktop layout');
+	// Outside any 11:11 minute (Kathmandu's 05:26 is next), so the jab shows a city count to hold back.
+	await page.clock.install({ time: new Date('2026-10-26T05:12:00Z') });
+	await page.goto('./');
+	const html = page.locator('html');
+	const sticker = page.locator('.countdown-sticker');
+	const storyCentre = async () => {
+		const b = (await page.locator('.story').boundingBox())!;
+		return b.x + b.width / 2;
+	};
+	const pageCentre = page.viewportSize()!.width / 2;
+	await expect(html).toHaveClass(/\breveal\b/);
+	await expect(page.locator('[data-wish-input]')).toBeVisible(); // the rest of the phone is there from the start
+	await expect(sticker).toHaveCSS('opacity', '0');
+	expect(Math.abs((await storyCentre()) - pageCentre)).toBeLessThan(2);
+
+	await expect(page.locator('.manifesto-text')).toHaveClass(/is-typing/, { timeout: 8_000 });
+	await expect(sticker).toHaveCSS('opacity', '0'); // still hidden while the text writes
+	await expect(page.locator('.jab-count > :not(.jab-count-final)')).toHaveText('0'); // and the cities wait to count
+	await page.waitForTimeout(800);
+	expect(await storyCentre()).toBeLessThan(pageCentre - 100); // moved over to make room
+	await page.screenshot({ path: testInfo.outputPath('reveal-writing.png') });
+
+	await expect(html).not.toHaveClass(/\breveal\b/, { timeout: 15_000 });
+	await expect(sticker).toHaveCSS('opacity', '1');
+	await expect(page.locator('.manifesto-char:not(.is-on)')).toHaveCount(0);
+	await page.waitForTimeout(250);
+	await page.screenshot({ path: testInfo.outputPath('reveal-flying.png') });
+	await page.waitForTimeout(2_500);
+	await page.screenshot({ path: testInfo.outputPath('reveal-done.png') });
+});
+
+test('desktop reveal: a click shows everything at once', async ({ page }, testInfo) => {
+	test.skip(testInfo.project.name !== 'desktop', 'the reveal only plays on the desktop layout');
+	await page.goto('./');
+	await expect(page.locator('html')).toHaveClass(/\breveal\b/);
+	await page.mouse.click(5, 5);
+	await expect(page.locator('html')).not.toHaveClass(/\breveal\b/);
+	await expect(page.locator('.countdown-sticker')).toHaveCSS('opacity', '1');
+	await expect(page.locator('.countdown-jab')).toHaveCSS('opacity', '1');
+	await expect(page.locator('.manifesto-text')).toBeVisible();
+});
+
 test('after the intro, the manifesto stays covered and the footer sits below the story', async ({ page }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'the intro only plays on the mobile layout');
 	await open(page);
@@ -220,33 +272,79 @@ test('the fleeing button comes back when you go back to the wish box', async ({ 
 	await expect.poll(() => submit.evaluate((el) => el.style.transform)).toBe('');
 });
 
-test('the fleeing button lets you catch it on the third try, then denies the wish anyway', async ({ page }) => {
+test('the fleeing button runs a random number of times, once per approach, then denies the wish anyway', async ({ page }) => {
 	await open(page);
 	for (let i = 0; i < 40 && !(await activeSabotages(page)).includes('flee'); i++) await submitWish(page, 'x');
 	test.skip(!(await activeSabotages(page)).includes('flee'), 'never rolled "flee"');
 
 	await page.locator('[data-wish-input]').fill('a pony');
+	const form = page.locator('[data-wish-form]');
 	const submit = page.locator('[data-wish-submit]');
+	const maxDodges = Number(await form.getAttribute('data-max-dodges'));
+	expect(maxDodges).toBeGreaterThanOrEqual(2);
+	expect(maxDodges).toBeLessThanOrEqual(5);
 	const centre = async () => {
 		const b = (await submit.boundingBox())!;
 		return [b.x + b.width / 2, b.y + b.height / 2] as const;
 	};
-	for (let dodge = 1; dodge <= 2; dodge++) {
+	// Sweep in like a real mouse (many moves in a row) so a dodge still in flight can't be spent twice.
+	const approach = async () => {
 		const [x, y] = await centre();
-		await page.mouse.move(x, y);
-		await expect(page.locator('[data-wish-form]')).toHaveAttribute('data-dodges', String(dodge));
-		await page.waitForTimeout(250); // let it finish running
+		await page.mouse.move(x < page.viewportSize()!.width / 2 ? x + 140 : x - 140, y); // from whichever side is on screen
+		await page.mouse.move(x, y, { steps: 12 });
+		return [x, y] as const;
+	};
+	for (let dodge = 1; dodge <= maxDodges; dodge++) {
+		await approach();
+		await page.waitForTimeout(300); // let it finish running
+		await expect(form).toHaveAttribute('data-dodges', String(dodge));
 	}
 
-	const [x, y] = await centre();
-	await page.mouse.move(x, y);
-	await page.waitForTimeout(250);
+	const [x, y] = await approach();
+	await page.waitForTimeout(300);
 	expect(await centre()).toEqual([x, y]); // too tired to run
 	await page.mouse.click(x, y);
 
 	const paywall = page.locator('[data-paywall]');
 	if (await paywall.evaluate((d: HTMLDialogElement) => d.open)) await paywall.getByRole('button', { name: 'Keep my wish small' }).click();
 	await expect(page.locator('[data-wish-status]')).toHaveText(/Caught it|cornered the button|Nice sprint/);
+});
+
+test('a button that starts fleeing right after you clicked it waits until the cursor has left', async ({ page }, testInfo) => {
+	test.skip(testInfo.project.name !== 'desktop', 'hovering needs a mouse');
+	await open(page);
+	const form = page.locator('[data-wish-form]');
+	const submit = page.locator('[data-wish-submit]');
+	const input = page.locator('[data-wish-input]');
+	// Click send (from a calm button) until the re-roll after that click arms the chase.
+	for (let i = 0; i < 60; i++) {
+		if ((await activeSabotages(page)).includes('flee')) {
+			await submitWish(page, 'x'); // Enter, so the cursor isn't involved
+			continue;
+		}
+		const attempts = Number(await form.getAttribute('data-attempts'));
+		await input.fill('a pony');
+		const b = (await submit.boundingBox())!;
+		await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+		const paywall = page.locator('[data-paywall]');
+		if (await paywall.evaluate((d: HTMLDialogElement) => d.open)) await paywall.getByRole('button', { name: 'Keep my wish small' }).click();
+		await expect(form).toHaveAttribute('data-attempts', String(attempts + 1));
+		if ((await activeSabotages(page)).includes('flee') && (await submit.evaluate((el) => el.matches(':hover')))) break;
+	}
+	test.skip(!(await activeSabotages(page)).includes('flee'), 'never rolled "flee" right after a click');
+
+	// Wiggling over it doesn't scare it.
+	const b = (await submit.boundingBox())!;
+	const [x, y] = [b.x + b.width / 2, b.y + b.height / 2];
+	await page.mouse.move(x + 4, y + 2, { steps: 4 });
+	await page.mouse.move(x - 3, y - 1, { steps: 4 });
+	await page.waitForTimeout(300);
+	await expect(form).toHaveAttribute('data-dodges', '0');
+
+	// Once the cursor has left, coming back does.
+	await page.mouse.move(x - 300, y - 200, { steps: 6 });
+	await page.mouse.move(x, y, { steps: 12 });
+	await expect(form).toHaveAttribute('data-dodges', '1');
 });
 
 test('a caught button goes home after an empty wish too', async ({ page }) => {
@@ -257,7 +355,7 @@ test('a caught button goes home after an empty wish too', async ({ page }) => {
 	const form = page.locator('[data-wish-form]');
 	const submit = page.locator('[data-wish-submit]');
 	const attempts = Number(await form.getAttribute('data-attempts'));
-	for (let i = 0; i < 3; i++) {
+	for (let i = 0; i < 6; i++) {
 		const b = (await submit.boundingBox())!;
 		await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
 		await page.waitForTimeout(250);

@@ -9,6 +9,7 @@ import '@fontsource/permanent-marker/400.css';
 import '../styles/global.css';
 import Countdown from '../components/Countdown.astro';
 import WishForm from '../components/WishForm.astro';
+import { KOFI_URL } from '../lib/links';
 import { inkPath, penPoints, SCRIBBLE_HEIGHT, SCRIBBLE_WIDTH } from '../lib/scribble';
 import cormorant300Italic from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-300-italic.woff2?url';
 import cormorant400 from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff2?url';
@@ -34,10 +35,12 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 			setTimeout(() => document.documentElement.classList.remove('fonts-loading'), 2000);
 		</script>
 		<script is:inline>
-			// Decide before first paint, so the story never flashes before the mobile intro.
+			// Decide before first paint, so nothing flashes before the mobile intro or the desktop reveal.
 			// Must come after the viewport meta: until then mobile browsers report a ~980px layout width.
 			if (matchMedia('not all and (min-width: 60rem)').matches) {
 				document.documentElement.classList.add('intro');
+			} else if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+				document.documentElement.classList.add('reveal');
 			}
 		</script>
 		<meta name="description" content={description} />
@@ -104,6 +107,9 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 		</main>
 
 		<footer class="site-footer">
+			<p class="site-footer-kofi">
+				<a href={KOFI_URL} target="_blank" rel="noopener" data-goatcounter-click="kofi-click"><span aria-hidden="true">☕</span> Buy me a coffee on Ko-fi</a>
+			</p>
 			<p>No wishes are stored, sent or read. This site has no server to send them to.</p>
 			<p class="site-footer-credit">
 				City counts from <a href="https://www.geonames.org/" target="_blank" rel="noopener">GeoNames</a> (CC BY 4.0).
@@ -157,8 +163,12 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 		</script>
 
 		<script>
-			// Mobile intro, see the matching block in global.css. Tap anywhere to skip.
-			// With reduced motion the text appears at once, holds, and the phone replaces it without fading.
+			// Once the hero's scrawl and strike-through are done, the manifesto writes itself out (see the
+			// matching blocks in global.css). Tap or click anywhere to skip.
+			// Mobile intro (html.intro): under the hero on the bare page, then the phone fades in around it. With
+			// reduced motion the text appears at once, holds, and the phone replaces it without fading.
+			// Desktop reveal (html.reveal, never under reduced motion): the phone slides over from the middle of the
+			// page and the text writes itself out beside it, then the countdown sticker flies in.
 			const root = document.documentElement;
 			const CHAR_MS = 18;
 			const PARAGRAPH_PAUSE_MS = 260;
@@ -166,8 +176,10 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 			const FADE_MS = 800;
 			const REDUCED_MOTION_HOLD_MS = 3000;
 			const GAP_BELOW_HERO_PX = 24;
+			const SLIDE_HEAD_START_MS = 600; // the desktop phone gets out of the text's way first
 
-			if (root.classList.contains('intro')) {
+			const mobile = root.classList.contains('intro');
+			if (mobile || root.classList.contains('reveal')) {
 				const manifesto = document.querySelector<HTMLElement>('[data-manifesto]')!;
 				const story = document.querySelector<HTMLElement>('.story')!;
 				const hero = document.querySelector<HTMLElement>('.hero')!;
@@ -204,7 +216,7 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 				};
 
 				const finish = () => {
-					root.classList.remove('intro', 'intro-landing');
+					root.classList.remove('intro', 'intro-landing', 'reveal', 'reveal-writing');
 					document.removeEventListener('click', land);
 					text.style.fontSize = '';
 				};
@@ -213,6 +225,7 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 					landed = true;
 					clearTimeout(timer);
 					chars.forEach((c) => c.classList.add('is-on'));
+					if (!mobile) return finish();
 					root.classList.add('intro-landing');
 					if (reducedMotion) finish();
 					else timer = window.setTimeout(finish, FADE_MS);
@@ -240,7 +253,13 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 					clearTimeout(timer);
 					await document.fonts.ready;
 					if (landed) return;
-					place();
+					if (mobile) {
+						place();
+					} else {
+						root.classList.add('reveal-writing');
+						await new Promise((resolve) => setTimeout(resolve, SLIDE_HEAD_START_MS));
+						if (landed) return;
+					}
 					text.classList.add('is-typing');
 					if (reducedMotion) {
 						chars.forEach((c) => c.classList.add('is-on'));

@@ -121,9 +121,11 @@ input {
 
 @media (min-width: 60rem) {
 	.stage {
-		grid-template-columns: auto minmax(0, 24rem);
+		--manifesto-w: 24rem;
+		--stage-gap: 5rem;
+		grid-template-columns: auto minmax(0, var(--manifesto-w));
 		justify-content: center;
-		gap: 5rem;
+		gap: var(--stage-gap);
 	}
 
 	.story {
@@ -354,10 +356,12 @@ input {
 	font-weight: 500;
 }
 
+/* A plum tint rather than white, so it never reads as part of the countdown sticker. */
 .wish-status:not(:empty) {
 	padding: 0.5em 0.75em;
 	border-radius: 0.75em;
-	background: rgb(255 255 255 / 0.6);
+	background: rgb(58 37 71 / 0.16);
+	backdrop-filter: blur(6px);
 }
 
 .wish-form {
@@ -433,11 +437,6 @@ input {
 	}
 }
 
-.wish-form.is-portal .wish-send {
-	opacity: 0.45;
-	cursor: not-allowed;
-}
-
 /* Both lines share one grid cell, so swapping them never changes the height. */
 .wish-tip {
 	display: grid;
@@ -451,11 +450,6 @@ input {
 
 .wish-tip > .is-off {
 	visibility: hidden;
-}
-
-.wish-tip a {
-	color: inherit;
-	font-weight: 600;
 }
 
 /* Paywall */
@@ -616,6 +610,49 @@ input {
 	}
 }
 
+/*
+ * Desktop reveal (html.reveal is set before first paint, unless reduced motion). The phone starts
+ * alone in the middle of the page, minus its countdown sticker. After the hero's scrawl and
+ * strike-through it slides over to its spot (html.reveal-writing) while the manifesto writes itself
+ * out beside it. Then the sticker is slapped on from the right and its footnote fades in.
+ */
+@media (min-width: 60rem) {
+	.story {
+		transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+	}
+
+	.reveal:not(.reveal-writing) .story {
+		transform: translateX(calc((var(--manifesto-w) + var(--stage-gap)) / 2));
+	}
+
+	.reveal .manifesto-text:not(.is-typing) {
+		visibility: hidden;
+	}
+
+	.reveal .manifesto-char:not(.is-on) {
+		opacity: 0;
+	}
+
+	.countdown-sticker {
+		transition:
+			transform 0.7s cubic-bezier(0.34, 1.4, 0.64, 1),
+			opacity 0.2s ease;
+	}
+
+	.countdown-jab {
+		transition: opacity 0.6s ease 0.5s;
+	}
+
+	.reveal .countdown-sticker {
+		opacity: 0;
+		transform: translate(16em, -8em) rotate(28deg) scale(1.3);
+	}
+
+	.reveal .countdown-jab {
+		opacity: 0;
+	}
+}
+
 /* Footer */
 .site-footer {
 	display: grid;
@@ -632,6 +669,23 @@ input {
 		padding-bottom: 1.5rem;
 		font-size: 1.05rem;
 	}
+}
+
+.site-footer-kofi a {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4em;
+	margin-bottom: 0.3rem;
+	padding: 0.3em 1em;
+	border-radius: 999px;
+	background: var(--peach);
+	color: var(--plum);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.site-footer-kofi a:hover {
+	background: var(--blush);
 }
 
 .site-footer-credit {

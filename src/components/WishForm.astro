@@ -1,6 +1,5 @@
 ---
 // The wish box, styled as a story reply bar. It never accepts a wish; see src/lib/sabotage.
-import { KOFI_URL } from '../lib/links';
 ---
 
 <div class="wish">
@@ -95,7 +94,7 @@ import { KOFI_URL } from '../lib/links';
 	<p class="wish-tip">
 		<span data-tip-open>The universe is now accepting wishes. Response times may vary.</span>
 		<span class="is-off" data-tip-denied>
-			Wish denied. Unlike the universe, <a href={KOFI_URL} target="_blank" rel="noopener" data-goatcounter-click="kofi-click">my Ko-fi</a> actually receives.
+			Wish denied. Unlike the universe, the Ko-fi below receives.
 		</span>
 	</p>
 </div>
@@ -125,7 +124,7 @@ import { KOFI_URL } from '../lib/links';
 
 <script>
 	import { GENERIC_REJECTIONS, pickSabotages, type Cleanup, type Sabotage, type WishElements } from '../lib/sabotage';
-	import { DODGES, flee } from '../lib/sabotage/flee';
+	import { flee, isCaught } from '../lib/sabotage/flee';
 	import { track } from '../lib/track';
 
 	const els: WishElements = {
@@ -152,7 +151,8 @@ import { KOFI_URL } from '../lib/links';
 
 	function arm() {
 		cleanups.forEach((cleanup) => cleanup());
-		active = pickSabotages(Math.random, { reducedMotion: reducedMotion.matches });
+		const justFled = active.some((s) => s.id === 'flee');
+		active = pickSabotages(Math.random, { reducedMotion: reducedMotion.matches, justFled });
 		cleanups = active.flatMap((s) => (s.attach ? [s.attach(els)] : []));
 		els.form.dataset.sabotage = active.map((s) => s.id).join(' ');
 	}
@@ -175,7 +175,7 @@ import { KOFI_URL } from '../lib/links';
 
 		busy = true;
 		// If you caught the runaway button, the chase gets the last word; otherwise any active sabotage may.
-		const caught = active.some((s) => s.id === 'flee') && Number(els.form.dataset.dodges) >= DODGES;
+		const caught = active.some((s) => s.id === 'flee') && isCaught(els.form);
 		const rejecters = active.filter((s) => s.reject);
 		const rejecter = caught ? flee : rejecters.length ? pick(rejecters) : null;
 		status.textContent = rejecter ? await rejecter.reject!(wish, els) : pick(GENERIC_REJECTIONS);

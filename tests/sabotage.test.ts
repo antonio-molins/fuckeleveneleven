@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SLOP, slopFor } from '../src/lib/sabotage/correct';
 import { pickSabotages } from '../src/lib/sabotage';
+import { portalRejection } from '../src/lib/sabotage/portal';
 
 // Small deterministic PRNG (mulberry32) so failures are reproducible.
 function seeded(seed: number) {
@@ -60,5 +61,35 @@ describe('slopFor', () => {
 		expect(text).toBe(text.normalize());
 		expect(text.includes('�')).toBe(false);
 		expect([...text].every((c) => !/^[\uD800-\uDFFF]$/.test(c))).toBe(true);
+	});
+});
+
+describe('pickSabotages after a chase', () => {
+	it('never rolls fleeing twice in a row', () => {
+		for (let seed = 0; seed < 500; seed++) {
+			expect(pickSabotages(seeded(seed), { justFled: true }).map((s) => s.id)).not.toContain('flee');
+		}
+	});
+});
+
+describe('portalRejection', () => {
+	it('gives the exact miss when it was close', () => {
+		expect(portalRejection(2345, 'London')).toBe('The portal opens at 11:11:11.111 only. You missed London’s by 2.345s, babe.');
+		expect(portalRejection(-87, 'Kathmandu')).toBe('The portal opens at 11:11:11.111 only. You were 0.087s early for Kathmandu, babe.');
+		expect(portalRejection(59_999, 'London')).toContain('59.999s');
+	});
+
+	it('has a line for hitting it exactly', () => {
+		expect(portalRejection(0, 'Tokyo')).toBe('You hit 11:11:11.111 in Tokyo to the millisecond. The universe still said no.');
+	});
+
+	it('gets snarky, in minutes, when it was far', () => {
+		for (let seed = 0; seed < 20; seed++) {
+			const late = portalRejection(7 * 60_000 + 20_000, 'London', seeded(seed));
+			expect(late).toContain('7 minutes');
+			expect(late).not.toMatch(/\d\.\d{3}s/);
+			expect(portalRejection(-61_000, 'Kathmandu', seeded(seed))).toContain('1 minute');
+			expect(portalRejection(-61_000, 'Kathmandu', seeded(seed))).not.toContain('minutes');
+		}
 	});
 });

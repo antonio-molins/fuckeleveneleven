@@ -113,6 +113,28 @@ export function nextElevenEleven(nowMs: number, groups: OffsetGroup[]): NextElev
 	};
 }
 
+/** 11:11:11.111 local (and 23:11:11.111, the same instant modulo 12h): the portal's one open instant. */
+const PORTAL_MS = TARGET_MS + 11_111;
+
+export interface NearestPortal {
+	/** Every offset group whose portal instant is the nearest one. */
+	groups: OffsetGroup[];
+	/** How far now is from it: positive if it already passed (missed it), negative if it's still coming. */
+	offByMs: number;
+}
+
+/** The portal instant anywhere on Earth closest to now, in either direction. */
+export function nearestPortal(nowMs: number, groups: OffsetGroup[]): NearestPortal {
+	if (groups.length === 0) throw new Error('No time zones. Earth has been cancelled.');
+
+	const candidates = groups.map((group) => {
+		const since = mod(nowMs + group.offsetMinutes * MINUTE_MS - PORTAL_MS, HALF_DAY_MS);
+		return { group, offByMs: since <= HALF_DAY_MS / 2 ? since : since - HALF_DAY_MS };
+	});
+	const offByMs = candidates.reduce((best, c) => (Math.abs(c.offByMs) < Math.abs(best) ? c.offByMs : best), Infinity);
+	return { groups: candidates.filter((c) => c.offByMs === offByMs).map((c) => c.group), offByMs };
+}
+
 export function prettyZone(zone: string): string {
 	const city = zone.split('/').pop()!.replaceAll('_', ' ');
 	return CITY_ALIASES[city] ?? city;
