@@ -125,6 +125,16 @@ test('mobile intro: hero first, then the text, then the phone fades in around a 
 	page,
 }, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'the intro only plays on the mobile layout');
+	// Record every class the <html> element goes through: the fade phase is too short to catch by polling.
+	await page.addInitScript(() => {
+		const seen: string[] = [];
+		(window as unknown as { introPhases: string[] }).introPhases = seen;
+		new MutationObserver(() => seen.push(document.documentElement.className)).observe(document, {
+			attributes: true,
+			subtree: true,
+			attributeFilter: ['class'],
+		});
+	});
 	await page.goto('./');
 
 	const html = page.locator('html');
@@ -139,11 +149,9 @@ test('mobile intro: hero first, then the text, then the phone fades in around a 
 	await page.waitForTimeout(1_500);
 	await page.screenshot({ path: testInfo.outputPath('intro-writing.png') });
 
-	await expect(html).toHaveClass(/intro-landing/, { timeout: 10_000 });
-	await page.waitForTimeout(400);
-	await page.screenshot({ path: testInfo.outputPath('intro-fading.png') });
-
-	await expect(html).not.toHaveClass(/intro/, { timeout: 5_000 });
+	await expect(html).not.toHaveClass(/intro/, { timeout: 15_000 });
+	const phases = await page.evaluate(() => (window as unknown as { introPhases: string[] }).introPhases);
+	expect(phases.some((c) => /\bintro-landing\b/.test(c))).toBe(true);
 	await expect(page.locator('.story')).toBeInViewport({ ratio: 1 });
 	const heroAfter = (await page.locator('.hero').boundingBox())!;
 	expect(heroAfter.x).toBeCloseTo(heroBefore.x, 0);
