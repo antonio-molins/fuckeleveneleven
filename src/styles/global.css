@@ -219,7 +219,7 @@ input {
 .hero-strike-pen {
 	fill: none;
 	stroke: #fff;
-	stroke-width: 20;
+	stroke-width: 24;
 	stroke-linecap: round;
 	stroke-linejoin: round;
 }
@@ -231,7 +231,7 @@ input {
 
 	.hero-strike-pen {
 		stroke-dasharray: 1;
-		animation: strike 1s 1.05s linear both;
+		animation: strike 0.85s 1.05s cubic-bezier(0.45, 0, 0.75, 1) both;
 	}
 
 	@keyframes scrawl {
@@ -243,33 +243,12 @@ input {
 		}
 	}
 
-	/*
-	 * The pen reveals the ink at the hand's pace: quick through each pass, a hitch at every turn
-	 * (roughly 22%, 47% and 70% along the path), then a rushed final slash.
-	 */
+	/* A brush accelerates through a zig-zag: start deliberate, finish in a rush. */
 	@keyframes strike {
-		0% {
+		from {
 			stroke-dashoffset: 1;
 		}
-		20% {
-			stroke-dashoffset: 0.79;
-		}
-		27% {
-			stroke-dashoffset: 0.76;
-		}
-		45% {
-			stroke-dashoffset: 0.54;
-		}
-		52% {
-			stroke-dashoffset: 0.51;
-		}
-		68% {
-			stroke-dashoffset: 0.31;
-		}
-		75% {
-			stroke-dashoffset: 0.28;
-		}
-		100% {
+		to {
 			stroke-dashoffset: 0;
 		}
 	}

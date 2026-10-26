@@ -9,7 +9,7 @@ import '@fontsource/permanent-marker/400.css';
 import '../styles/global.css';
 import Countdown from '../components/Countdown.astro';
 import WishForm from '../components/WishForm.astro';
-import { SCRIBBLE_HEIGHT, SCRIBBLE_WIDTH, scratchOut } from '../lib/scribble';
+import { brushZigzag, SCRIBBLE_HEIGHT, SCRIBBLE_WIDTH } from '../lib/scribble';
 import cormorant300Italic from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-300-italic.woff2?url';
 import cormorant400 from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff2?url';
 import cormorant400Italic from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-italic.woff2?url';
@@ -18,7 +18,7 @@ import marker from '@fontsource/permanent-marker/files/permanent-marker-latin-40
 // The faces on screen at first paint: fetched early, and the page stays hidden until they're in.
 const criticalFonts = [cormorant300Italic, cormorant400, cormorant400Italic, marker];
 
-const strike = scratchOut();
+const strike = brushZigzag();
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const description = 'The next 11:11 on Earth, a countdown to it, and a wish box that will not take your wish.';
 ---
@@ -63,14 +63,23 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 					<span class="hero-wish" aria-hidden="true">
 						make a wish ✨
 						<!--
-							A build-time scratch-out (src/lib/scribble.ts): variable-width ink, revealed by an invisible
-							pen line that draws along the same path inside a mask.
+							A build-time dry-brush zig-zag (src/lib/scribble.ts): a core plus bristles of variable-width ink,
+							roughened by a noise filter, revealed by an invisible pen that draws along it inside a mask.
 						-->
 						<svg class="hero-strike" viewBox={`0 0 ${SCRIBBLE_WIDTH} ${SCRIBBLE_HEIGHT}`} aria-hidden="true">
+							<filter id="brush-rough" x="-5%" y="-20%" width="110%" height="140%">
+								<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="11" />
+								<feDisplacementMap in="SourceGraphic" scale="1.8" />
+							</filter>
 							<mask id="strike-reveal" maskUnits="userSpaceOnUse" x="-20" y="-20" width={SCRIBBLE_WIDTH + 40} height={SCRIBBLE_HEIGHT + 40}>
 								<path class="hero-strike-pen" pathLength="1" d={strike.pen} />
 							</mask>
-							<path class="hero-strike-ink" d={strike.ink} mask="url(#strike-reveal)" />
+							<g class="hero-strike-ink" mask="url(#strike-reveal)">
+								<g filter="url(#brush-rough)">
+									{strike.ink.map((d) => <path d={d} />)}
+									{strike.specks.map(([cx, cy, r]) => <circle cx={cx} cy={cy} r={r} />)}
+								</g>
+							</g>
 						</svg>
 					</span>
 					<span class="hero-fuck" aria-hidden="true">fuck</span>
