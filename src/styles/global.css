@@ -10,7 +10,7 @@
 	--ink: #3a2547;
 	--plum: #2b1734;
 	--marker: #000;
-	--pen: #1f3ad1; /* the vandal's ballpoint: FUCK, the strike-through and every marker note */
+	--pen: #8b1a1a; /* dried-red marker: FUCK and the strike-through */
 	--spray: #e0241b;
 
 	--serif: 'Cormorant Garamond', Georgia, serif;
@@ -270,7 +270,7 @@ input {
 	font-size: 0.95em;
 	font-style: normal;
 	font-weight: 400;
-	color: var(--pen);
+	color: var(--marker);
 }
 
 .countdown-city::after,
@@ -296,7 +296,7 @@ input {
 	font-family: var(--scrawl);
 	font-size: 0.9em;
 	line-height: 1.3;
-	color: var(--pen);
+	color: var(--marker);
 	text-wrap: balance;
 	transform: rotate(-3deg);
 }
