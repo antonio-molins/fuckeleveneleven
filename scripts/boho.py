@@ -1,14 +1,24 @@
 # Generates the boho line-art wallpaper used on .story::before in src/styles/global.css.
 # Usage: python3 scripts/boho.py [opacity]  -> prints a data URI to paste into the url("...").
-# Thin outlines scattered over the whole phone (one 9:16 drawing, no repeating tile, so no rows):
-# moon phases, crystals, evil eyes, suns, constellations, crescents with a star, sparkles.
-# Placement is seeded Poisson-disk sampling, so it's random-looking but evenly spread and stable.
+# Thin outlines like a manifestation-journal cover: moon phases, crystals, evil eyes, suns,
+# constellations, crescents with a star, sparkles. A fixed tile arrangement repeated over the whole
+# phone (one 9:16 drawing), with every copy nudged and tilted independently (seeded), so it keeps a
+# loose rhythm without the stiff rows a repeating CSS tile would give.
 import math, random, sys, urllib.parse
 
-WIDTH, HEIGHT = 450, 800  # the phone's 9:16
-MIN_DISTANCE = 46  # between motif centres
-SCALE = 1.3
+WIDTH, HEIGHT = 450, 800  # the phone's 9:16; the story is 1/0.045 = 22.2em wide
+TILE = 450 * 7 / (1 / 0.045)  # a 7em tile, in drawing units
+JITTER = 7  # max position nudge, in drawing units
+MAX_TILT = 10  # degrees either way
 SEED = 1111
+
+# The tile arrangement, in a 120-unit tile: (x, y, motif, size).
+LAYOUT = [
+    (22, 22, 'crystal', 1), (74, 17, 'eye', 1), (58, 56, 'phases', 1), (103, 50, 'sun', 1),
+    (24, 80, 'constellation', 1), (92, 96, 'crescent', 1), (52, 102, 'sparkle', 1),
+    (110, 14, 'spark', 1), (8, 50, 'spark', 0.83),
+]
+MOTIF_SCALE = 1.35 * TILE / 120
 
 
 def sparkle(r):
@@ -43,52 +53,21 @@ MOTIFS = {
     'sparkle': f"<path d='{sparkle(4)}'/>",
     'spark': f"<path d='{sparkle(2.4)}'/>",
 }
-# How often each motif turns up: the small sparkles fill the gaps.
-WEIGHTS = {'crystal': 3, 'eye': 3, 'sun': 3, 'phases': 2, 'constellation': 2, 'crescent': 3, 'sparkle': 3, 'spark': 4}
-
-
-def poisson_disk(rand, width, height, radius, tries=30):
-    """Bridson's algorithm: evenly spread random points, none closer than `radius`."""
-    cell = radius / math.sqrt(2)
-    cols, rows = int(width / cell) + 1, int(height / cell) + 1
-    grid = [[None] * rows for _ in range(cols)]
-    first = (rand.uniform(0, width), rand.uniform(0, height))
-    points, active = [first], [first]
-    grid[int(first[0] / cell)][int(first[1] / cell)] = first
-    while active:
-        base = rand.choice(active)
-        for _ in range(tries):
-            angle, dist = rand.uniform(0, 2 * math.pi), rand.uniform(radius, 2 * radius)
-            x, y = base[0] + math.cos(angle) * dist, base[1] + math.sin(angle) * dist
-            if not (0 <= x < width and 0 <= y < height):
-                continue
-            gx, gy = int(x / cell), int(y / cell)
-            near = (grid[i][j] for i in range(max(gx - 2, 0), min(gx + 3, cols))
-                    for j in range(max(gy - 2, 0), min(gy + 3, rows)) if grid[i][j])
-            if all(math.dist((x, y), p) >= radius for p in near):
-                grid[gx][gy] = (x, y)
-                points.append((x, y))
-                active.append((x, y))
-                break
-        else:
-            active.remove(base)
-    return points
-
-
 rand = random.Random(SEED)
-names, weights = zip(*WEIGHTS.items())
 uses = []
-for x, y in poisson_disk(rand, WIDTH, HEIGHT, MIN_DISTANCE):
-    name = rand.choices(names, weights)[0]
-    angle = rand.uniform(-28, 28)
-    scale = SCALE * rand.uniform(0.85, 1.15)
-    uses.append(f"<use href='#{name}' transform='translate({x:.0f} {y:.0f}) rotate({angle:.0f}) scale({scale:.2f})'/>")
+for row in range(math.ceil(HEIGHT / TILE)):
+    for col in range(math.ceil(WIDTH / TILE)):
+        for x, y, name, size in LAYOUT:
+            px = col * TILE + x * TILE / 120 + rand.uniform(-JITTER, JITTER)
+            py = row * TILE + y * TILE / 120 + rand.uniform(-JITTER, JITTER)
+            angle = rand.uniform(-MAX_TILT, MAX_TILT)
+            uses.append(f"<use href='#{name}' transform='translate({px:.0f} {py:.0f}) rotate({angle:.0f}) scale({MOTIF_SCALE * size:.2f})'/>")
 
 defs = ''.join(f"<g id='{name}'>{body}</g>" for name, body in MOTIFS.items())
 opacity = sys.argv[1] if len(sys.argv) > 1 else 0.1
 svg = (f"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 {WIDTH} {HEIGHT}'>"
        "<style>.dot{fill:#3a2547;stroke:none}</style>"
        f"<defs>{defs}</defs>"
-       f"<g fill='none' stroke='#3a2547' stroke-width='0.8' stroke-linecap='round' stroke-linejoin='round' opacity='{opacity}'>"
+       f"<g fill='none' stroke='#3a2547' stroke-width='0.75' stroke-linecap='round' stroke-linejoin='round' opacity='{opacity}'>"
        f"{''.join(uses)}</g></svg>")
 print("data:image/svg+xml," + urllib.parse.quote(svg, safe="/:=' .,-()"))
