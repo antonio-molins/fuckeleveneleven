@@ -114,8 +114,8 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 			// Draws the strike-through live: one pen position per frame, after the FUCK scrawl.
 			import { inkPath, penPoints } from '../lib/scribble';
 
-			const START_DELAY_MS = 1050;
-			const DRAW_MS = 1300;
+			const START_DELAY_MS = 950;
+			const DRAW_MS = 900;
 			const ink = document.querySelector<SVGPathElement>('[data-strike]')!;
 			const done = () => document.dispatchEvent(new Event('strike:done'));
 

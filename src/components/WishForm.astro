@@ -123,6 +123,7 @@ import { KOFI_URL } from '../lib/links';
 
 <script>
 	import { GENERIC_REJECTIONS, pickSabotages, type Cleanup, type Sabotage, type WishElements } from '../lib/sabotage';
+	import { DODGES, flee } from '../lib/sabotage/flee';
 
 	const els: WishElements = {
 		form: document.querySelector('[data-wish-form]')!,
@@ -169,9 +170,10 @@ import { KOFI_URL } from '../lib/links';
 		}
 
 		busy = true;
-		// If the button was running away, the chase gets the last word.
+		// If you caught the runaway button, the chase gets the last word; otherwise any active sabotage may.
+		const caught = active.some((s) => s.id === 'flee') && Number(els.form.dataset.dodges) >= DODGES;
 		const rejecters = active.filter((s) => s.reject);
-		const rejecter = active.find((s) => s.id === 'flee') ?? (rejecters.length ? pick(rejecters) : null);
+		const rejecter = caught ? flee : rejecters.length ? pick(rejecters) : null;
 		status.textContent = rejecter ? await rejecter.reject!(wish, els) : pick(GENERIC_REJECTIONS);
 		els.input.value = '';
 		arm();

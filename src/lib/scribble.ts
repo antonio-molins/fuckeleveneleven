@@ -1,4 +1,4 @@
-// A crayon strike-through: one long stroke, right, back left, right again, nearly flat.
+// A crayon strike-through: one long stroke scrubbing right and left across the words, nearly flat.
 // The pen is sampled at even steps in *time*, easing in and out of every pass, so the points bunch up
 // at the turns and spread out mid-pass. Revealing them one per time step therefore draws fast through
 // the middle and slow into each change of direction, and perfect-freehand (which reads pressure from
@@ -10,14 +10,17 @@ type Point = [number, number];
 export const SCRIBBLE_WIDTH = 320;
 export const SCRIBBLE_HEIGHT = 90;
 
-// Each pass: from, to, and how much it bows away from a straight line.
-const PASSES: [Point, Point, number][] = [
-	[[4, 49], [306, 41], -1.5],
-	[[300, 46], [22, 51], 1.5],
-	[[28, 44], [316, 36], -1],
-];
-const STEPS_PER_PASS = 40;
-const TURN_STEPS = 4;
+const PASSES = 5; // right, left, right, left, right
+const STEPS_PER_PASS = 34;
+const TURN_STEPS = 10;
+const CENTRE_X = 160;
+const HALF_SPAN = 146;
+// Height where the stroke starts, then where each pass ends. Rightward passes climb steeply and leftward
+// ones come back nearly flat, and every turn drops just below the pass it ends, so each pass crosses the
+// one before it (a zig-zag scratch-out, not an oval). Centred on the body of the lowercase letters.
+const HEIGHTS = [60, 42, 50, 44, 47, 38];
+const TURN_RADIUS = 2.5;
+const EASE_FLOOR = 0.15; // keeps a little speed at the end of a pass, so it flows into the turn
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const easeInOut = (t: number) => (1 - Math.cos(Math.PI * t)) / 2;
@@ -42,32 +45,50 @@ function smoothNoise(rand: () => number, knots: number) {
 	};
 }
 
-/** The pen's position at even time steps. Spacing encodes speed: tight at the turns, wide mid-pass. */
+/**
+ * The pen's position at even time steps, as one continuous zig-zag. Each pass eases out of one turn and
+ * into the next (fast in the middle, slow at the ends, slightly curved); each turn is a single small
+ * semicircle, taken slowly, so it reads as a tight rounded hairpin and the ink pools there.
+ * Random reach at each end, a slow drift and a slight wobble keep it from looking mechanical.
+ */
 export function penPoints(seed = 1111): Point[] {
-	const points: Point[] = [];
-	PASSES.forEach(([from, to, bow], i) => {
-		for (let k = i === 0 ? 0 : 1; k <= STEPS_PER_PASS; k++) {
-			const u = easeInOut(k / STEPS_PER_PASS);
-			points.push([lerp(from[0], to[0], u), lerp(from[1], to[1], u) + Math.sin(Math.PI * u) * bow]);
+	const rand = seeded(seed);
+	const ends = Array.from({ length: PASSES + 1 }, (_, i) => CENTRE_X + (i % 2 ? 1 : -1) * (HALF_SPAN + (rand() - 0.5) * 16));
+	const bows = Array.from({ length: PASSES }, () => (rand() - 0.5) * 3);
+	const drift = smoothNoise(rand, 6);
+	const wobble = smoothNoise(rand, 30);
+	const raw: Point[] = [];
+
+	for (let pass = 0; pass < PASSES; pass++) {
+		const rightward = pass % 2 === 0;
+		const from = pass === 0 ? HEIGHTS[0] : HEIGHTS[pass] + 2 * TURN_RADIUS;
+		const to = HEIGHTS[pass + 1];
+		for (let k = pass === 0 ? 0 : 1; k <= STEPS_PER_PASS; k++) {
+			const linear = k / STEPS_PER_PASS;
+			const u = (1 - EASE_FLOOR) * easeInOut(linear) + EASE_FLOOR * linear;
+			raw.push([lerp(ends[pass], ends[pass + 1], u), lerp(from, to, u) + bows[pass] * Math.sin(Math.PI * u) ** 2]);
 		}
-		const next = PASSES[i + 1];
-		if (next) {
-			// A short hook round the turn, still slow.
-			for (let k = 1; k <= TURN_STEPS; k++) {
-				const t = k / (TURN_STEPS + 1);
-				points.push([lerp(to[0], next[0][0], t), lerp(to[1], next[0][1], easeInOut(t))]);
+		if (pass < PASSES - 1) {
+			// Round the end and drop below: clockwise on the right, anticlockwise on the left.
+			const direction = rightward ? 1 : -1;
+			for (let j = 1; j < TURN_STEPS; j++) {
+				const angle = -Math.PI / 2 + (direction * Math.PI * j) / TURN_STEPS;
+				raw.push([ends[pass + 1] + TURN_RADIUS * Math.cos(angle), to + TURN_RADIUS + TURN_RADIUS * Math.sin(angle)]);
 			}
 		}
+	}
+
+	return raw.map(([x, y], i) => {
+		const t = i / (raw.length - 1);
+		return [x, y + (drift(t) - 0.5) * 3 + (wobble(t) - 0.5) * 1.2];
 	});
-	const wobble = smoothNoise(seeded(seed), 18);
-	return points.map(([x, y], i) => [x, y + (wobble(i / points.length) - 0.5) * 2.4]);
 }
 
 /** The ink outline for the first `count` pen points (all of them when the stroke is finished). */
 export function inkPath(points: Point[], count = points.length): string {
 	const done = count >= points.length;
 	const outline = getStroke(points.slice(0, Math.max(2, count)), {
-		size: 5.4,
+		size: 6.2,
 		thinning: 0.7,
 		smoothing: 0.6,
 		streamline: 0.35,

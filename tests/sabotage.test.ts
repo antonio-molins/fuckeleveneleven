@@ -14,13 +14,23 @@ function seeded(seed: number) {
 }
 
 describe('pickSabotages', () => {
-	it('always picks 1–3 distinct sabotages', () => {
+	it('always picks 1–2 distinct sabotages', () => {
 		for (let seed = 0; seed < 500; seed++) {
 			const ids = pickSabotages(seeded(seed)).map((s) => s.id);
 			expect(ids.length).toBeGreaterThanOrEqual(1);
-			expect(ids.length).toBeLessThanOrEqual(3);
+			expect(ids.length).toBeLessThanOrEqual(2);
 			expect(new Set(ids).size).toBe(ids.length);
 		}
+	});
+
+	it('picks every sabotage about equally often', () => {
+		const counts: Record<string, number> = {};
+		const rng = seeded(42);
+		const rounds = 20_000;
+		for (let i = 0; i < rounds; i++) for (const s of pickSabotages(rng)) counts[s.id] = (counts[s.id] ?? 0) + 1;
+		const shares = Object.values(counts).map((n) => n / rounds);
+		expect(Object.keys(counts)).toHaveLength(4);
+		for (const share of shares) expect(share).toBeCloseTo(0.375, 1); // 1.5 picks per round over 4 sabotages
 	});
 
 	it('eventually uses every sabotage', () => {
