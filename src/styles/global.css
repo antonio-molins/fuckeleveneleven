@@ -534,7 +534,7 @@ input {
 
 /*
  * Mobile intro (html.intro is set before first paint). The hero is drawn on the bare page, in light
- * ink, exactly where it sits in the phone. Once its scrawl and strike finish, the manifesto writes
+ * ink (FUCK and the strike-through keep their dried red), exactly where it sits in the phone. Once its scrawl and strike finish, the manifesto writes
  * itself out underneath (the script positions and fits it). Then the rest of the phone fades in
  * around the hero, covering the text; the hero never moves. Afterwards the manifesto stays hidden.
  */
@@ -581,25 +581,12 @@ input {
 		transition: opacity 0.8s ease;
 	}
 
-	.intro .hero,
-	.intro .hero-fuck {
+	.intro .hero {
 		transition: color 0.8s ease;
-	}
-
-	.intro .hero-strike-ink {
-		transition: fill 0.8s ease;
 	}
 
 	.intro:not(.intro-landing) .hero {
 		color: var(--blush);
-	}
-
-	.intro:not(.intro-landing) .hero-fuck {
-		color: var(--paper);
-	}
-
-	.intro:not(.intro-landing) .hero-strike-ink {
-		fill: var(--paper);
 	}
 
 	.intro-landing .manifesto {
@@ -617,8 +604,6 @@ input {
 	.intro .manifesto,
 	.intro .story::before,
 	.intro .story > *,
-	.intro .hero-fuck,
-	.intro .hero-strike-ink,
 	.intro .site-footer {
 		transition: none;
 	}
