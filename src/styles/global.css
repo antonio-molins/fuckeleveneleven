@@ -204,13 +204,22 @@ input {
 
 .hero-strike {
 	position: absolute;
-	inset: -40% -6% auto;
+	top: 50%;
+	left: -6%;
 	width: 112%;
-	height: 160%;
+	height: auto;
 	overflow: visible;
+	transform: translateY(-50%);
+}
+
+.hero-strike-ink {
+	fill: var(--spray);
+}
+
+.hero-strike-pen {
 	fill: none;
-	stroke: var(--spray);
-	stroke-width: 4;
+	stroke: #fff;
+	stroke-width: 20;
 	stroke-linecap: round;
 	stroke-linejoin: round;
 }
@@ -220,9 +229,9 @@ input {
 		animation: scrawl 0.45s 0.6s steps(6, end) both;
 	}
 
-	.hero-strike path {
+	.hero-strike-pen {
 		stroke-dasharray: 1;
-		animation: strike 0.9s 1.05s linear both;
+		animation: strike 1s 1.05s linear both;
 	}
 
 	@keyframes scrawl {
@@ -234,22 +243,31 @@ input {
 		}
 	}
 
-	/* Uneven pace, like a hand: a fast first pass, a hitch at each turn, then a rushed flick. */
+	/*
+	 * The pen reveals the ink at the hand's pace: quick through each pass, a hitch at every turn
+	 * (roughly 22%, 47% and 70% along the path), then a rushed final slash.
+	 */
 	@keyframes strike {
 		0% {
 			stroke-dashoffset: 1;
 		}
-		30% {
-			stroke-dashoffset: 0.66;
+		20% {
+			stroke-dashoffset: 0.79;
 		}
-		38% {
-			stroke-dashoffset: 0.62;
+		27% {
+			stroke-dashoffset: 0.76;
 		}
-		64% {
-			stroke-dashoffset: 0.3;
+		45% {
+			stroke-dashoffset: 0.54;
 		}
-		72% {
-			stroke-dashoffset: 0.26;
+		52% {
+			stroke-dashoffset: 0.51;
+		}
+		68% {
+			stroke-dashoffset: 0.31;
+		}
+		75% {
+			stroke-dashoffset: 0.28;
 		}
 		100% {
 			stroke-dashoffset: 0;

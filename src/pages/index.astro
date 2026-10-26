@@ -9,6 +9,7 @@ import '@fontsource/permanent-marker/400.css';
 import '../styles/global.css';
 import Countdown from '../components/Countdown.astro';
 import WishForm from '../components/WishForm.astro';
+import { SCRIBBLE_HEIGHT, SCRIBBLE_WIDTH, scratchOut } from '../lib/scribble';
 import cormorant300Italic from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-300-italic.woff2?url';
 import cormorant400 from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff2?url';
 import cormorant400Italic from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-italic.woff2?url';
@@ -17,6 +18,7 @@ import marker from '@fontsource/permanent-marker/files/permanent-marker-latin-40
 // The faces on screen at first paint: fetched early, and the page stays hidden until they're in.
 const criticalFonts = [cormorant300Italic, cormorant400, cormorant400Italic, marker];
 
+const strike = scratchOut();
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const description = 'The next 11:11 on Earth, a countdown to it, and a wish box that will not take your wish.';
 ---
@@ -60,9 +62,15 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 					<span class="hero-time" aria-hidden="true">11:11</span>
 					<span class="hero-wish" aria-hidden="true">
 						make a wish ✨
-						<!-- One furious pen stroke: scrubs back and forth over the words, then slashes out past them. -->
-						<svg class="hero-strike" viewBox="0 0 320 52" preserveAspectRatio="none" aria-hidden="true">
-							<path pathLength="1" d="M2 40 C90 31 198 19 312 7 Q327 2 310 17 C212 25 112 37 8 48 Q-7 52 12 40 C112 30 202 25 300 14 Q319 10 303 27 C252 36 192 41 122 47 L316 0" />
+						<!--
+							A build-time scratch-out (src/lib/scribble.ts): variable-width ink, revealed by an invisible
+							pen line that draws along the same path inside a mask.
+						-->
+						<svg class="hero-strike" viewBox={`0 0 ${SCRIBBLE_WIDTH} ${SCRIBBLE_HEIGHT}`} aria-hidden="true">
+							<mask id="strike-reveal" maskUnits="userSpaceOnUse" x="-20" y="-20" width={SCRIBBLE_WIDTH + 40} height={SCRIBBLE_HEIGHT + 40}>
+								<path class="hero-strike-pen" pathLength="1" d={strike.pen} />
+							</mask>
+							<path class="hero-strike-ink" d={strike.ink} mask="url(#strike-reveal)" />
 						</svg>
 					</span>
 					<span class="hero-fuck" aria-hidden="true">fuck</span>
@@ -113,7 +121,7 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 				const manifesto = document.querySelector<HTMLElement>('[data-manifesto]')!;
 				const story = document.querySelector<HTMLElement>('.story')!;
 				const hero = document.querySelector<HTMLElement>('.hero')!;
-				const strike = document.querySelector('.hero-strike path')!;
+				const strike = document.querySelector('.hero-strike-pen')!;
 				const text = manifesto.querySelector<HTMLElement>('.manifesto-text')!;
 				const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 				const chars = [...manifesto.querySelectorAll('.manifesto-text p')].flatMap((p) => {
