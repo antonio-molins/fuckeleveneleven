@@ -10,6 +10,7 @@
 	--ink: #3a2547;
 	--plum: #2b1734;
 	--marker: #000;
+	--pen: #1f3ad1; /* the vandal's ballpoint: FUCK, the strike-through and every marker note */
 	--spray: #e0241b;
 
 	--serif: 'Cormorant Garamond', Georgia, serif;
@@ -197,7 +198,7 @@ input {
 	font-style: normal;
 	font-weight: 400;
 	font-size: 3.8em;
-	color: var(--marker);
+	color: var(--pen);
 	transform: rotate(-12deg);
 	line-height: 1;
 }
@@ -218,7 +219,7 @@ input {
 }
 
 .hero-strike-ink {
-	fill: var(--spray);
+	fill: var(--pen);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -269,7 +270,7 @@ input {
 	font-size: 0.95em;
 	font-style: normal;
 	font-weight: 400;
-	color: var(--marker);
+	color: var(--pen);
 }
 
 .countdown-city::after,
@@ -295,7 +296,7 @@ input {
 	font-family: var(--scrawl);
 	font-size: 0.9em;
 	line-height: 1.3;
-	color: var(--marker);
+	color: var(--pen);
 	text-wrap: balance;
 	transform: rotate(-3deg);
 }
@@ -585,12 +586,20 @@ input {
 		transition: color 0.8s ease;
 	}
 
+	.intro .hero-strike-ink {
+		transition: fill 0.8s ease;
+	}
+
 	.intro:not(.intro-landing) .hero {
 		color: var(--blush);
 	}
 
 	.intro:not(.intro-landing) .hero-fuck {
 		color: var(--paper);
+	}
+
+	.intro:not(.intro-landing) .hero-strike-ink {
+		fill: var(--paper);
 	}
 
 	.intro-landing .manifesto {
@@ -609,6 +618,7 @@ input {
 	.intro .story::before,
 	.intro .story > *,
 	.intro .hero-fuck,
+	.intro .hero-strike-ink,
 	.intro .site-footer {
 		transition: none;
 	}
