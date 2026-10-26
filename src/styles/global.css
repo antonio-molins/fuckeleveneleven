@@ -57,6 +57,15 @@ input {
 	outline-offset: 3px;
 }
 
+/* Set in <head> until the display fonts are in, so text never flashes in a fallback font. */
+.fonts-loading body {
+	visibility: hidden;
+}
+
+.fonts-loading * {
+	animation-play-state: paused !important;
+}
+
 .visually-hidden {
 	position: absolute;
 	width: 1px;
@@ -88,10 +97,18 @@ input {
 	aspect-ratio: 9 / 16;
 	padding: 0.6em 1em 1em;
 	border-radius: 1em;
-	background: linear-gradient(165deg, var(--lilac), var(--blush) 52%, var(--peach));
 	font-size: calc(var(--story-w) * 0.045);
 	text-align: center;
 	overflow: hidden;
+}
+
+/* The screen itself lives on a pseudo-element so the mobile intro can fade it in behind the hero. */
+.story::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: linear-gradient(165deg, var(--lilac), var(--blush) 52%, var(--peach));
 }
 
 @media (min-width: 60rem) {
@@ -280,12 +297,15 @@ input {
 
 /* Wish box, styled as a story reply bar */
 .wish {
+	position: relative;
 	display: grid;
 	gap: 0.5em;
 }
 
+/* A toast floating above the reply bar, so rejections never shift the wish box. */
 .wish-status {
-	min-height: 1.45em;
+	position: absolute;
+	inset: auto 0 calc(100% + 0.5em);
 	font-style: italic;
 	font-weight: 500;
 }
@@ -335,9 +355,19 @@ input {
 	cursor: not-allowed;
 }
 
+/* Both lines share one grid cell, so swapping them never changes the height. */
 .wish-tip {
+	display: grid;
 	font-size: 0.8em;
 	font-style: italic;
+}
+
+.wish-tip > * {
+	grid-area: 1 / 1;
+}
+
+.wish-tip > .is-off {
+	visibility: hidden;
 }
 
 .wish-tip a {
@@ -361,7 +391,7 @@ input {
 	background: rgb(43 23 52 / 0.7);
 }
 
-.paywall > div {
+.paywall > div:not([hidden]) {
 	display: grid;
 	gap: 0.8rem;
 }
@@ -427,21 +457,24 @@ input {
 }
 
 /*
- * Mobile: the manifesto only exists as the intro (html.intro is set before first paint). It fills
- * the screen and writes itself out, then the story slides up over it and it stays covered.
+ * Mobile intro (html.intro is set before first paint). The hero is drawn on the bare page, in light
+ * ink, exactly where it sits in the phone. Once its scrawl and strike finish, the manifesto writes
+ * itself out underneath (the script positions and fits it). Then the rest of the phone fades in
+ * around the hero, covering the text; the hero never moves. Afterwards the manifesto stays hidden.
  */
 @media not all and (min-width: 60rem) {
 	.manifesto {
 		position: fixed;
-		inset: 0;
+		inset: var(--manifesto-top, 50%) var(--manifesto-x, 1rem) 0;
 		z-index: 0;
-		display: grid;
-		align-content: center;
 		max-width: none;
-		padding: 1.5rem max(1rem, calc((100vw - 24rem) / 2));
 		opacity: 0;
 		pointer-events: none;
-		transition: opacity 0.4s 0.3s;
+		transition: opacity 0.8s ease;
+	}
+
+	.intro {
+		cursor: pointer;
 	}
 
 	.intro body {
@@ -450,15 +483,9 @@ input {
 
 	.intro .manifesto {
 		opacity: 1;
-		pointer-events: auto;
-		cursor: pointer;
 	}
 
-	.intro-landing .manifesto {
-		opacity: 0;
-	}
-
-	/* Hidden until the script has split it into characters, so the full text never flashes. */
+	/* Hidden until the script has split and placed it, so the full text never flashes. */
 	.intro .manifesto-text:not(.is-typing) {
 		visibility: hidden;
 	}
@@ -468,26 +495,46 @@ input {
 	}
 
 	.intro .story {
-		transform: translateY(105svh);
-		transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+		pointer-events: none;
 	}
 
-	.intro-landing .story {
-		transform: none;
-	}
-
+	.intro .story::before,
+	.intro .story > :not(.hero),
 	.intro .site-footer {
-		visibility: hidden;
+		opacity: 0;
+		transition: opacity 0.8s ease;
 	}
 
-	/* Hold the hero scrawl until the story has landed, so it isn't drawn off-screen. */
-	.intro:not(.intro-landing) :is(.hero-fuck, .hero-strike path) {
-		animation-play-state: paused;
+	.intro .hero,
+	.intro .hero-fuck {
+		transition: color 0.8s ease;
+	}
+
+	.intro:not(.intro-landing) .hero {
+		color: var(--blush);
+	}
+
+	.intro:not(.intro-landing) .hero-fuck {
+		color: var(--paper);
+	}
+
+	.intro-landing .manifesto {
+		opacity: 0;
+	}
+
+	.intro-landing .story::before,
+	.intro-landing .story > :not(.hero),
+	.intro-landing .site-footer {
+		opacity: 1;
 	}
 }
 
 @media not all and (min-width: 60rem) and (prefers-reduced-motion: reduce) {
-	.intro .story {
+	.intro .manifesto,
+	.intro .story::before,
+	.intro .story > *,
+	.intro .hero-fuck,
+	.intro .site-footer {
 		transition: none;
 	}
 }

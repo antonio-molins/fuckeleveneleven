@@ -10,8 +10,11 @@ import { KOFI_URL } from '../lib/links';
 		<input id="wish" name="wish" type="text" maxlength="280" placeholder="Make a wish…" data-wish-input />
 		<button type="submit" class="wish-send" data-wish-submit>Send wish</button>
 	</form>
-	<p class="wish-tip" data-wish-tip hidden>
-		Wish denied. A <a href={KOFI_URL} target="_blank" rel="noopener">coffee on Ko-fi</a>, however, is a real transaction.
+	<p class="wish-tip">
+		<span data-tip-open>The universe is now accepting wishes. Response times may vary.</span>
+		<span class="is-off" data-tip-denied>
+			Wish denied. Unlike the universe, <a href={KOFI_URL} target="_blank" rel="noopener">my Ko-fi</a> actually receives.
+		</span>
 	</p>
 </div>
 
@@ -46,7 +49,8 @@ import { KOFI_URL } from '../lib/links';
 		paywall: document.querySelector('[data-paywall]')!,
 	};
 	const status = document.querySelector<HTMLElement>('[data-wish-status]')!;
-	const tip = document.querySelector<HTMLElement>('[data-wish-tip]')!;
+	const tipOpen = document.querySelector<HTMLElement>('[data-tip-open]')!;
+	const tipDenied = document.querySelector<HTMLElement>('[data-tip-denied]')!;
 	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 	const pick = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
 
@@ -78,7 +82,8 @@ import { KOFI_URL } from '../lib/links';
 		els.input.value = '';
 		arm();
 		els.form.dataset.attempts = String(++attempts);
-		tip.hidden = false;
+		tipOpen.classList.add('is-off');
+		tipDenied.classList.remove('is-off');
 		busy = false;
 	});
 

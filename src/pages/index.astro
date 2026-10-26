@@ -9,6 +9,13 @@ import '@fontsource/permanent-marker/400.css';
 import '../styles/global.css';
 import Countdown from '../components/Countdown.astro';
 import WishForm from '../components/WishForm.astro';
+import cormorant300Italic from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-300-italic.woff2?url';
+import cormorant400 from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff2?url';
+import cormorant400Italic from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-italic.woff2?url';
+import marker from '@fontsource/permanent-marker/files/permanent-marker-latin-400-normal.woff2?url';
+
+// The faces on screen at first paint: fetched early, and the page stays hidden until they're in.
+const criticalFonts = [cormorant300Italic, cormorant400, cormorant400Italic, marker];
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const description = 'The next 11:11 on Earth, a countdown to it, and a wish box that will not take your wish.';
@@ -18,6 +25,12 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		{criticalFonts.map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
+		<script is:inline>
+			// Hide the page until the display fonts load (see the script at the end of <body>), never longer than 2s.
+			document.documentElement.classList.add('fonts-loading');
+			setTimeout(() => document.documentElement.classList.remove('fonts-loading'), 2000);
+		</script>
 		<script is:inline>
 			// Decide before first paint, so the story never flashes before the mobile intro.
 			// Must come after the viewport meta: until then mobile browsers report a ~980px layout width.
@@ -73,17 +86,30 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 		</footer>
 
 		<script>
-			// Mobile intro: the manifesto writes itself out, then the story slides up over it. Tap to skip.
-			// With reduced motion the text appears at once, holds, and the story replaces it without sliding.
+			const FONT_WAIT_MS = 1500;
+			const faces = ['italic 300 1em "Cormorant Garamond"', 'italic 400 1em "Cormorant Garamond"', '400 1em "Cormorant Garamond"', '1em "Permanent Marker"'];
+			Promise.race([
+				Promise.all(faces.map((face) => document.fonts.load(face))),
+				new Promise((resolve) => setTimeout(resolve, FONT_WAIT_MS)),
+			]).finally(() => document.documentElement.classList.remove('fonts-loading'));
+		</script>
+
+		<script>
+			// Mobile intro, see the matching block in global.css. Tap anywhere to skip.
+			// With reduced motion the text appears at once, holds, and the phone replaces it without fading.
 			const root = document.documentElement;
 			const CHAR_MS = 18;
 			const PARAGRAPH_PAUSE_MS = 260;
 			const HOLD_MS = 700;
+			const FADE_MS = 800;
 			const REDUCED_MOTION_HOLD_MS = 3000;
+			const GAP_BELOW_HERO_PX = 24;
 
 			if (root.classList.contains('intro')) {
 				const manifesto = document.querySelector<HTMLElement>('[data-manifesto]')!;
 				const story = document.querySelector<HTMLElement>('.story')!;
+				const hero = document.querySelector<HTMLElement>('.hero')!;
+				const strike = document.querySelector('.hero-strike path')!;
 				const text = manifesto.querySelector<HTMLElement>('.manifesto-text')!;
 				const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 				const chars = [...manifesto.querySelectorAll('.manifesto-text p')].flatMap((p) => {
@@ -100,19 +126,37 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 
 				let next = 0;
 				let timer = 0;
+				let started = false;
 				let landed = false;
 
-				const finish = () => root.classList.remove('intro', 'intro-landing');
+				// Put the text under the hero, lined up with the phone's content, shrunk to fit the space left.
+				const place = () => {
+					const s = story.getBoundingClientRect();
+					const padding = parseFloat(getComputedStyle(story).paddingLeft);
+					manifesto.style.setProperty('--manifesto-top', `${hero.getBoundingClientRect().bottom + GAP_BELOW_HERO_PX}px`);
+					manifesto.style.setProperty('--manifesto-x', `${s.left + padding}px`);
+					for (let i = 0; i < 4 && text.scrollHeight > manifesto.clientHeight - GAP_BELOW_HERO_PX; i++) {
+						const size = parseFloat(getComputedStyle(text).fontSize);
+						const fit = (manifesto.clientHeight - GAP_BELOW_HERO_PX) / text.scrollHeight;
+						text.style.fontSize = `${size * Math.max(0.7, fit)}px`;
+					}
+				};
+
+				const finish = () => {
+					root.classList.remove('intro', 'intro-landing');
+					document.removeEventListener('click', land);
+					text.style.fontSize = '';
+				};
 				const land = () => {
 					if (landed) return;
 					landed = true;
 					clearTimeout(timer);
 					chars.forEach((c) => c.classList.add('is-on'));
 					root.classList.add('intro-landing');
-					if (reducedMotion) return finish();
-					story.addEventListener('transitionend', (e) => e.target === story && finish());
-					timer = window.setTimeout(finish, 1500); // in case transitionend never fires
+					if (reducedMotion) finish();
+					else timer = window.setTimeout(finish, FADE_MS);
 				};
+
 				// Reveal against elapsed time rather than chained timers, so a busy phone doesn't slow the writing.
 				const revealAt: number[] = [];
 				let at = 0;
@@ -129,13 +173,29 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 					else timer = window.setTimeout(land, HOLD_MS);
 				};
 
-				manifesto.addEventListener('click', land);
-				text.classList.add('is-typing');
+				const begin = async () => {
+					if (started || landed) return;
+					started = true;
+					clearTimeout(timer);
+					await document.fonts.ready;
+					if (landed) return;
+					place();
+					text.classList.add('is-typing');
+					if (reducedMotion) {
+						chars.forEach((c) => c.classList.add('is-on'));
+						timer = window.setTimeout(land, REDUCED_MOTION_HOLD_MS);
+					} else {
+						requestAnimationFrame(write);
+					}
+				};
+
+				document.addEventListener('click', land);
 				if (reducedMotion) {
-					chars.forEach((c) => c.classList.add('is-on'));
-					timer = window.setTimeout(land, REDUCED_MOTION_HOLD_MS);
+					begin();
 				} else {
-					requestAnimationFrame(write);
+					// The text starts once the strike-through has finished drawing.
+					strike.addEventListener('animationend', begin, { once: true });
+					timer = window.setTimeout(begin, 2500);
 				}
 			}
 		</script>

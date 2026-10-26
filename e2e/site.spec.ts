@@ -12,9 +12,11 @@ async function submitWish(page: Page, wish: string, paywallChoice: 'upgrade' | '
 	const paywall = page.locator('[data-paywall]');
 	if (await paywall.evaluate((d: HTMLDialogElement) => d.open)) {
 		await expect(paywall).toContainText('characters over the free tier');
+		await expect(paywall.getByText('sold out')).toBeHidden();
 		if (paywallChoice === 'upgrade') {
 			await paywall.getByRole('button', { name: 'Upgrade to Wish Pro' }).click();
-			await expect(paywall).toContainText('sold out');
+			await expect(paywall.getByText('sold out')).toBeVisible();
+			await expect(paywall.getByText('characters over the free tier')).toBeHidden();
 			await paywall.getByRole('button', { name: 'Back to wishing' }).click();
 		} else {
 			await paywall.getByRole('button', { name: 'Keep my wish small' }).click();
@@ -27,7 +29,7 @@ async function submitWish(page: Page, wish: string, paywallChoice: 'upgrade' | '
 async function open(page: Page) {
 	await page.goto('./');
 	if (await page.locator('html.intro').count()) {
-		await page.locator('[data-manifesto]').click();
+		await page.mouse.click(5, 5); // a tap anywhere skips
 		await expect(page.locator('html')).not.toHaveClass(/intro/);
 	}
 }
@@ -93,27 +95,44 @@ test('offers Ko-fi only once a wish has been denied', async ({ page }) => {
 	await open(page);
 	await expect(page.locator('a[href*="ko-fi.com"]:visible')).toHaveCount(0);
 
-	const tip = page.locator('[data-wish-tip]');
-	await expect(tip).toBeHidden();
+	const open_ = page.locator('[data-tip-open]');
+	const denied = page.locator('[data-tip-denied]');
+	await expect(open_).toBeVisible();
+	await expect(denied).toBeHidden();
 	await submitWish(page, 'a pony');
-	await expect(tip).toBeVisible();
-	await expect(tip.getByRole('link')).toHaveAttribute('href', 'https://ko-fi.com/lesselevens');
+	await expect(open_).toBeHidden();
+	await expect(denied).toBeVisible();
+	await expect(denied.getByRole('link')).toHaveAttribute('href', 'https://ko-fi.com/lesselevens');
 	await expect(page.locator('a[href*="ko-fi.com"]')).toHaveCount(1);
 });
 
-test('mobile intro writes the manifesto, then the story slides over it', async ({ page }, testInfo) => {
+test('mobile intro: hero first, then the text, then the phone fades in around a hero that never moves', async ({
+	page,
+}, testInfo) => {
 	test.skip(testInfo.project.name !== 'mobile', 'the intro only plays on the mobile layout');
 	await page.goto('./');
 
 	const html = page.locator('html');
 	await expect(html).toHaveClass(/intro/);
-	await expect(page.locator('.manifesto-char.is-on').first()).toBeVisible();
-	await page.waitForTimeout(800);
+	await expect(page.locator('.countdown')).toHaveCSS('opacity', '0');
+	const heroBefore = (await page.locator('.hero').boundingBox())!;
+	await page.screenshot({ path: testInfo.outputPath('intro-hero.png') });
+
+	await expect(page.locator('.manifesto-char.is-on').first()).toBeVisible({ timeout: 5_000 });
+	const textTop = (await page.locator('.manifesto-text').boundingBox())!.y;
+	expect(textTop).toBeGreaterThan(heroBefore.y + heroBefore.height);
+	await page.waitForTimeout(1_500);
 	await page.screenshot({ path: testInfo.outputPath('intro-writing.png') });
 
-	await expect(html).not.toHaveClass(/intro/, { timeout: 10_000 });
+	await expect(html).toHaveClass(/intro-landing/, { timeout: 10_000 });
+	await page.waitForTimeout(400);
+	await page.screenshot({ path: testInfo.outputPath('intro-fading.png') });
+
+	await expect(html).not.toHaveClass(/intro/, { timeout: 5_000 });
 	await expect(page.locator('.story')).toBeInViewport({ ratio: 1 });
-	await page.waitForTimeout(1_800);
+	const heroAfter = (await page.locator('.hero').boundingBox())!;
+	expect(heroAfter.x).toBeCloseTo(heroBefore.x, 0);
+	expect(heroAfter.y).toBeCloseTo(heroBefore.y, 0);
 	await page.screenshot({ path: testInfo.outputPath('intro-landed.png') });
 });
 
@@ -139,6 +158,26 @@ test('after the intro, the manifesto stays covered and the footer sits below the
 	expect(story.x).toBeGreaterThanOrEqual(15);
 	expect(story.y + story.height).toBeLessThanOrEqual(footer.y);
 	expect(footer.y + footer.height).toBeLessThanOrEqual(viewport.height);
+});
+
+test('reveals the page only once the display fonts are in', async ({ page }) => {
+	await page.goto('./');
+	await expect(page.locator('html')).not.toHaveClass(/fonts-loading/);
+	const loaded = await page.evaluate(() =>
+		['italic 300 1em "Cormorant Garamond"', '1em "Permanent Marker"'].every((f) => document.fonts.check(f)),
+	);
+	expect(loaded).toBe(true);
+});
+
+test('keeps the wish box still when wishes get rejected', async ({ page }) => {
+	await open(page);
+	const input = page.locator('[data-wish-input]');
+	const before = (await input.boundingBox())!;
+	for (let i = 0; i < 3; i++) {
+		await submitWish(page, 'a pony');
+		const after = (await input.boundingBox())!;
+		expect(after.y).toBeCloseTo(before.y, 0);
+	}
 });
 
 test('has a centered footer with the no-backend note', async ({ page }) => {

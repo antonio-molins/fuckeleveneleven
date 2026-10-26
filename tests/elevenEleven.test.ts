@@ -108,6 +108,7 @@ describe('naming', () => {
 		['Asia/Katmandu', 'Kathmandu'],
 		['Asia/Calcutta', 'Kolkata'],
 		['America/Argentina/Buenos_Aires', 'Buenos Aires'],
+		['America/St_Johns', 'St. John’s'],
 	])('%s -> %s', (zone, city) => expect(prettyZone(zone)).toBe(city));
 
 	it('prefers famous zones for the headline', () => {

@@ -56,6 +56,7 @@ const CITY_ALIASES: Record<string, string> = {
 	Kiev: 'Kyiv',
 	Rangoon: 'Yangon',
 	Godthab: 'Nuuk',
+	'St Johns': 'St. John’s',
 };
 
 const mod = (n: number, m: number) => ((n % m) + m) % m;
