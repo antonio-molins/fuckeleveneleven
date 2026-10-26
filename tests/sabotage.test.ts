@@ -64,10 +64,22 @@ describe('slopFor', () => {
 	});
 });
 
-describe('pickSabotages after a chase', () => {
-	it('never rolls fleeing twice in a row', () => {
-		for (let seed = 0; seed < 500; seed++) {
-			expect(pickSabotages(seeded(seed), { justFled: true }).map((s) => s.id)).not.toContain('flee');
+describe('pickSabotages after a round', () => {
+	it('never brings back anything from the previous round', () => {
+		const rng = seeded(1111);
+		let previous: ReturnType<typeof pickSabotages> = [];
+		for (let round = 0; round < 500; round++) {
+			const next = pickSabotages(rng, { previous: previous.map((s) => s.id) });
+			expect(next.length).toBeGreaterThanOrEqual(1);
+			for (const s of next) expect(previous).not.toContain(s);
+			previous = next;
+		}
+	});
+
+	it('still finds something under reduced motion when the previous round took two', () => {
+		for (let seed = 0; seed < 200; seed++) {
+			const ids = pickSabotages(seeded(seed), { reducedMotion: true, previous: ['correct', 'paywall'] }).map((s) => s.id);
+			expect(ids).toEqual(['portal']);
 		}
 	});
 });

@@ -119,17 +119,20 @@ input {
 		linear-gradient(165deg, var(--lilac), var(--blush) 52%, var(--peach));
 }
 
+/* Side by side with the manifesto. On narrow windows the margins, gap and text column shrink, and
+   the phone is capped by the width left over, so neither one ever hugs the window's edge. */
 @media (min-width: 60rem) {
 	.stage {
-		--manifesto-w: 24rem;
-		--stage-gap: 5rem;
+		--manifesto-w: clamp(17rem, 30vw, 24rem);
+		--stage-gap: clamp(3rem, 6vw, 5rem);
 		grid-template-columns: auto minmax(0, var(--manifesto-w));
 		justify-content: center;
 		gap: var(--stage-gap);
+		padding-inline: clamp(2.5rem, 6vw, 5rem);
 	}
 
 	.story {
-		--story-w: min(30rem, (100cqh - 3rem) * 9 / 16);
+		--story-w: min(30rem, (100cqh - 3rem) * 9 / 16, 100cqw - var(--manifesto-w) - var(--stage-gap));
 	}
 }
 
@@ -664,10 +667,40 @@ input {
 	text-align: center;
 }
 
+/*
+ * On a phone the footer splits in two: the notes stacked on the left, the coffee alone and larger on
+ * the right. On desktop all three share one row, set apart by sparkles.
+ */
+.site-footer-sep {
+	margin-inline: 0.5em;
+	opacity: 0.5;
+	font-size: 0.85em;
+	font-style: normal;
+}
+
+.site-footer > .site-footer-sep {
+	display: none;
+}
+
 @media (min-width: 60rem) {
 	.site-footer {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		align-items: center;
+		gap: 0.3rem 0.9rem;
 		padding-bottom: 1.5rem;
 		font-size: 1.05rem;
+	}
+
+	.site-footer > .site-footer-sep {
+		display: inline;
+		margin-inline: 0;
+	}
+
+	/* Same spacing as the row's gap, so all the sparkles sit evenly. */
+	.site-footer-notes .site-footer-sep {
+		margin-inline: 0.9rem;
 	}
 }
 
@@ -675,7 +708,6 @@ input {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.4em;
-	margin-bottom: 0.3rem;
 	padding: 0.3em 1em;
 	border-radius: 999px;
 	background: rgb(201 182 242 / 0.14); /* --lilac, faint */
@@ -684,13 +716,72 @@ input {
 	text-decoration: none;
 }
 
+.kofi-cup {
+	width: 1.25em;
+	height: 1.25em;
+	fill: currentColor;
+}
+
 .site-footer-kofi a:hover {
 	background: rgb(201 182 242 / 0.26);
 }
 
 .site-footer-credit {
-	font-size: 0.85em;
 	opacity: 0.8;
+}
+
+@media not all and (min-width: 60rem) {
+	/* The coffee stays on one line, its pill stretched as tall as the notes beside it. */
+	.site-footer {
+		grid-template-columns: 1fr auto;
+		column-gap: 0.75rem;
+		font-size: 0.85rem;
+		line-height: 1.35;
+		text-align: left;
+	}
+
+	.site-footer-notes .site-footer-sep {
+		display: none;
+	}
+
+	.site-footer-notes,
+	.site-footer-credit {
+		text-wrap: balance;
+	}
+
+	.site-footer-credit {
+		display: block;
+		margin-top: 0.25em;
+	}
+
+	.site-footer-kofi {
+		display: flex;
+		font-size: var(--kofi-size, 1.2rem);
+		white-space: nowrap;
+	}
+
+	.site-footer-kofi a {
+		padding: 0 0.8em 0 0.65em;
+	}
+}
+
+/* Below ~412px the notes would need five lines beside it, so stack instead: coffee, then each note. */
+@media not all and (min-width: 25.75rem) {
+	.site-footer {
+		grid-template-columns: none;
+		row-gap: 0.35rem;
+		text-align: center;
+	}
+
+	.site-footer-kofi {
+		order: -1;
+		justify-content: center;
+		font-size: 1.1rem;
+	}
+
+	.site-footer-kofi a {
+		padding: 0.3em 1em;
+	}
 }
 
 .site-footer-credit a {

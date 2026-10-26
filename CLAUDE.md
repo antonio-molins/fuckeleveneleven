@@ -26,7 +26,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `src/lib/sabotage/`: each sabotage implements `Sabotage` from `types.ts`.
   - `attach(els)` provides live mischief and returns a cleanup function.
   - `reject(wish, els)` resolves to the rejection message.
-  - `pickSabotages()` picks a random 1–2, never `flee` under `prefers-reduced-motion`, and never `flee` twice in a row (`justFled`).
+  - `pickSabotages()` picks a random 1–2, never `flee` under `prefers-reduced-motion`, and never anything from the previous round (`previous`).
   - `flee` dodges a random 2–5 times per arming (`data-max-dodges`), at most once per approach (after each dodge, and when armed under the cursor right after a click, it stays calm until the cursor has left its panic radius), always landing away from both the pointer and its old spot. `isCaught(form)` says when it lets itself be pressed.
 - `src/lib/scribble.ts` + the strike script in `index.astro`: the "make a wish" strike-through is one perfect-freehand stroke. Pen points are sampled at even *time* steps with eased passes, so revealing one point per frame draws fast mid-pass and slow at turns, and simulated pressure thickens the ink at the turns. The server renders it finished (no-JS and reduced motion). The script redraws it live after the fonts gate, then dispatches `strike:done`, which the mobile intro waits for. The crayon grain is the `#crayon` SVG filter.
 - `src/components/WishForm.astro`: on every submit it always rejects, then re-rolls the sabotages. It exposes `data-sabotage` (active ids) and `data-attempts` (incremented once a submit fully settles) for e2e tests to wait on.

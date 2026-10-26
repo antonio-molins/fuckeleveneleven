@@ -408,12 +408,30 @@ test('keeps the wish box still when wishes get rejected', async ({ page }) => {
 	}
 });
 
-test('has a centered footer with the no-backend note', async ({ page }) => {
+test('has a footer with the no-backend note: one centred row on desktop, notes beside the coffee on mobile', async ({
+	page,
+}, testInfo) => {
 	await open(page);
 	const footer = page.locator('footer');
 	await footer.scrollIntoViewIfNeeded();
 	await expect(footer).toContainText('No wishes are stored, sent or read.');
-	await expect(footer).toHaveCSS('text-align', 'center');
+	const notes = (await page.locator('.site-footer-notes').boundingBox())!;
+	const kofi = (await page.locator('.site-footer-kofi a').boundingBox())!;
+	if (testInfo.project.name === 'desktop') {
+		await expect(footer).toHaveCSS('justify-content', 'center');
+		expect(Math.abs(notes.y + notes.height / 2 - (kofi.y + kofi.height / 2))).toBeLessThan(4); // one row
+	} else {
+		expect(kofi.x).toBeGreaterThan(notes.x + notes.width); // the coffee sits to the right
+		expect(Math.abs(kofi.height - notes.height)).toBeLessThan(6); // as tall as the notes
+		expect(kofi.height).toBeLessThan(70); // which stay three lines, so the pill never balloons
+
+		// Narrower phones stack them instead: the coffee on top, the notes centred below.
+		await page.setViewportSize({ width: 390, height: 844 });
+		const narrowNotes = (await page.locator('.site-footer-notes').boundingBox())!;
+		const narrowKofi = (await page.locator('.site-footer-kofi a').boundingBox())!;
+		expect(narrowKofi.y + narrowKofi.height).toBeLessThanOrEqual(narrowNotes.y + 1);
+		await expect(footer).toHaveCSS('text-align', 'center');
+	}
 });
 
 test('screenshot', async ({ page }, testInfo) => {

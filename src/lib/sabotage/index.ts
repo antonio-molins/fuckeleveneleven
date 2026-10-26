@@ -16,14 +16,14 @@ export const GENERIC_REJECTIONS = [
 ];
 
 /**
- * A random set of 1–2 sabotages, each equally likely. Fleeing is skipped for reduced motion, and right
- * after a round that had it (`justFled`), so a chase is never followed by another.
+ * A random set of 1–2 sabotages, each equally likely. None from the previous round (`previous`) comes
+ * back right away, so every retry feels different. Fleeing is skipped for reduced motion.
  */
 export function pickSabotages(
 	rng: () => number = Math.random,
-	{ reducedMotion = false, justFled = false } = {},
+	{ reducedMotion = false, previous = [] as Sabotage['id'][] } = {},
 ): Sabotage[] {
-	const pool = ALL_SABOTAGES.filter((s) => !((reducedMotion || justFled) && s.id === 'flee'));
+	const pool = ALL_SABOTAGES.filter((s) => !previous.includes(s.id) && !(reducedMotion && s.id === 'flee'));
 	for (let i = pool.length - 1; i > 0; i--) {
 		const j = Math.floor(rng() * (i + 1));
 		[pool[i], pool[j]] = [pool[j], pool[i]];
