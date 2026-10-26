@@ -244,6 +244,27 @@ test('the fleeing button lets you catch it on the third try, then denies the wis
 	await expect(page.locator('[data-wish-status]')).toHaveText(/Caught it|cornered the button|Nice sprint/);
 });
 
+test('a caught button goes home after an empty wish too', async ({ page }) => {
+	await open(page);
+	for (let i = 0; i < 40 && !(await activeSabotages(page)).includes('flee'); i++) await submitWish(page, 'x');
+	test.skip(!(await activeSabotages(page)).includes('flee'), 'never rolled "flee"');
+
+	const form = page.locator('[data-wish-form]');
+	const submit = page.locator('[data-wish-submit]');
+	const attempts = Number(await form.getAttribute('data-attempts'));
+	for (let i = 0; i < 3; i++) {
+		const b = (await submit.boundingBox())!;
+		await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+		await page.waitForTimeout(250);
+	}
+	const b = (await submit.boundingBox())!;
+	await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+
+	await expect(page.locator('[data-wish-status]')).toHaveText('Empty wishes are a premium feature.');
+	await expect(form).toHaveAttribute('data-attempts', String(attempts + 1));
+	await expect.poll(() => submit.evaluate((el) => el.style.transform)).toBe('');
+});
+
 test('the icon-only send button still has a name', async ({ page }) => {
 	await open(page);
 	await expect(page.getByRole('button', { name: 'Send wish' })).toBeVisible();

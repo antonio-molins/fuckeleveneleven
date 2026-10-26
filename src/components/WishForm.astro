@@ -159,7 +159,11 @@ import { KOFI_URL } from '../lib/links';
 		if (busy) return;
 		const wish = els.input.value.trim();
 		if (!wish) {
+			// Rejected like any other wish: everything resets, including a button that ran off.
 			status.textContent = 'Empty wishes are a premium feature.';
+			els.input.value = '';
+			arm();
+			els.form.dataset.attempts = String(++attempts);
 			showDenied();
 			return;
 		}
