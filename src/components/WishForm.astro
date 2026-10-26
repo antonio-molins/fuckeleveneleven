@@ -95,7 +95,7 @@ import { KOFI_URL } from '../lib/links';
 	<p class="wish-tip">
 		<span data-tip-open>The universe is now accepting wishes. Response times may vary.</span>
 		<span class="is-off" data-tip-denied>
-			Wish denied. Unlike the universe, <a href={KOFI_URL} target="_blank" rel="noopener">my Ko-fi</a> actually receives.
+			Wish denied. Unlike the universe, <a href={KOFI_URL} target="_blank" rel="noopener" data-goatcounter-click="kofi-click">my Ko-fi</a> actually receives.
 		</span>
 	</p>
 </div>
@@ -107,7 +107,9 @@ import { KOFI_URL } from '../lib/links';
 		<p>The free tier includes 0 characters. Wish Pro includes priority manifestation, a gratitude journal PDF and 11% off my next course.</p>
 		<p class="paywall-price">$111.11 a month, billed every lunar cycle.</p>
 		<div class="paywall-actions">
-			<button type="button" class="paywall-upgrade" data-paywall-action="upgrade">Upgrade to Wish Pro</button>
+			<button type="button" class="paywall-upgrade" data-paywall-action="upgrade" data-goatcounter-click="wish-pro-upgrade"
+				>Upgrade to Wish Pro</button
+			>
 			<button type="button" class="paywall-decline" data-paywall-action="decline">Keep my wish small</button>
 		</div>
 	</div>
@@ -124,6 +126,7 @@ import { KOFI_URL } from '../lib/links';
 <script>
 	import { GENERIC_REJECTIONS, pickSabotages, type Cleanup, type Sabotage, type WishElements } from '../lib/sabotage';
 	import { DODGES, flee } from '../lib/sabotage/flee';
+	import { track } from '../lib/track';
 
 	const els: WishElements = {
 		form: document.querySelector('[data-wish-form]')!,
@@ -162,6 +165,7 @@ import { KOFI_URL } from '../lib/links';
 		if (!wish) {
 			// Rejected like any other wish: everything resets, including a button that ran off.
 			status.textContent = 'Empty wishes are a premium feature.';
+			track('wish-denied-empty');
 			els.input.value = '';
 			arm();
 			els.form.dataset.attempts = String(++attempts);
@@ -175,6 +179,7 @@ import { KOFI_URL } from '../lib/links';
 		const rejecters = active.filter((s) => s.reject);
 		const rejecter = caught ? flee : rejecters.length ? pick(rejecters) : null;
 		status.textContent = rejecter ? await rejecter.reject!(wish, els) : pick(GENERIC_REJECTIONS);
+		track(`wish-denied-${rejecter?.id ?? 'generic'}`);
 		els.input.value = '';
 		arm();
 		els.form.dataset.attempts = String(++attempts);

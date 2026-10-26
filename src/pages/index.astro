@@ -47,6 +47,14 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 		<link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
 		<meta name="generator" content={Astro.generator} />
 		<title>Fuck 11:11</title>
+		<!-- Anonymous visit counts. Pinned version with SRI; it skips localhost. See src/lib/track.ts for events. -->
+		<script
+			is:inline
+			data-goatcounter="https://fuckeleveneleven.goatcounter.com/count"
+			async
+			src="//gc.zgo.at/count.v5.js"
+			crossorigin="anonymous"
+			integrity="sha384-atnOLvQb9t+jTSipvd75X2yginT4PjVbqDdlJAmxMm+wYElFmeR6EmLP5bYeoRVQ"></script>
 	</head>
 	<body>
 		<main class="stage">

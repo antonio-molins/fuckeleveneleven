@@ -2,6 +2,11 @@ import { expect, test, type Page } from '@playwright/test';
 
 const SABOTAGES = ['flee', 'correct', 'paywall', 'portal'];
 
+// Keep the suite offline: never load the real analytics script (it would skip localhost anyway).
+test.beforeEach(async ({ page }) => {
+	await page.route('**://gc.zgo.at/**', (route) => route.abort());
+});
+
 /** Submits a wish, gets past the paywall if it shows up, and waits for the attempt to settle. */
 async function submitWish(page: Page, wish: string, paywallChoice: 'upgrade' | 'decline' = 'decline') {
 	const form = page.locator('[data-wish-form]');
@@ -263,6 +268,30 @@ test('a caught button goes home after an empty wish too', async ({ page }) => {
 	await expect(page.locator('[data-wish-status]')).toHaveText('Empty wishes are a premium feature.');
 	await expect(form).toHaveAttribute('data-attempts', String(attempts + 1));
 	await expect.poll(() => submit.evaluate((el) => el.style.transform)).toBe('');
+});
+
+test('talks to no outside host except GoatCounter', async ({ page }) => {
+	const hosts = new Set<string>();
+	page.on('request', (request) => hosts.add(new URL(request.url()).hostname));
+	await open(page);
+	for (let i = 0; i < 3; i++) await submitWish(page, 'a pony');
+	for (const host of hosts) expect(['localhost', 'gc.zgo.at']).toContain(host);
+});
+
+test('analytics events never include the wish', async ({ page }) => {
+	await page.addInitScript(() => {
+		const sent: unknown[] = [];
+		(window as unknown as { sent: unknown[] }).sent = sent;
+		window.goatcounter = { count: (vars) => sent.push(vars) };
+	});
+	await open(page);
+	for (let i = 0; i < 5; i++) await submitWish(page, 'my secret pony');
+	await page.locator('[data-wish-input]').press('Enter'); // an empty one too
+
+	const sent = await page.evaluate(() => (window as unknown as { sent: { path: string }[] }).sent);
+	expect(sent.length).toBeGreaterThanOrEqual(6);
+	for (const event of sent) expect(event.path).toMatch(/^wish-denied-(flee|correct|paywall|portal|generic|empty)$/);
+	expect(JSON.stringify(sent)).not.toMatch(/secret|pony/);
 });
 
 test('the icon-only send button still has a name', async ({ page }) => {
