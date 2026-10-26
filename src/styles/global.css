@@ -386,17 +386,21 @@ input {
 	z-index: 2;
 	display: inline-flex;
 	align-items: center;
+	--send-bg: color-mix(in oklab, var(--ink), white 14%);
 	padding: 0.55em 0.85em;
 	border: 0;
 	border-radius: 999px;
-	background: var(--ink);
+	background: var(--send-bg);
 	color: var(--paper);
 	font-weight: 600;
 	cursor: pointer;
 	transition: transform 0.16s ease-out;
 }
 
-/* Flat, single-colour send icon (paper plane plus twinkling sparkles) in the button's text colour. */
+/*
+ * Flat, single-colour send icon in the button's text colour: a paper plane with two stars orbiting it.
+ * The plane is filled with the button colour so it hides the stars while they pass behind it.
+ */
 .wish-send-icon {
 	width: 1.5em;
 	height: 1.5em;
@@ -404,7 +408,7 @@ input {
 }
 
 .wish-send-plane {
-	fill: none;
+	fill: var(--send-bg);
 	stroke: currentColor;
 	stroke-width: 2;
 	stroke-linejoin: round;
@@ -413,29 +417,19 @@ input {
 
 .wish-send-sparkle {
 	fill: currentColor;
-	transform-box: fill-box;
-	transform-origin: center;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-	.wish-send-sparkle {
-		animation: twinkle 1.6s ease-in-out infinite;
+.wish-send-still {
+	display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.wish-send-orbit {
+		display: none;
 	}
 
-	.wish-send-sparkle + .wish-send-sparkle {
-		animation-delay: -0.8s;
-	}
-
-	@keyframes twinkle {
-		0%,
-		100% {
-			opacity: 0.35;
-			transform: scale(0.45) rotate(0deg);
-		}
-		50% {
-			opacity: 1;
-			transform: scale(1) rotate(45deg);
-		}
+	.wish-send-still {
+		display: inline;
 	}
 }
 

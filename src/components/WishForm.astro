@@ -10,9 +10,33 @@ import { KOFI_URL } from '../lib/links';
 		<input id="wish" name="wish" type="text" maxlength="280" placeholder="Make a wish…" data-wish-input />
 		<button type="submit" class="wish-send" aria-label="Send wish" data-wish-submit>
 			<svg class="wish-send-icon" viewBox="0 0 26 24" aria-hidden="true">
+				<defs><path id="send-orbit" d="M2.5 11A12 4.5 0 0 0 26.5 11A12 4.5 0 0 0 2.5 11" /></defs>
+				<!-- Each star is drawn twice: under the plane for the back half of its orbit, over it for the front half. -->
+				<g class="wish-send-orbit" transform="rotate(-28 14.5 11)">
+					<path class="wish-send-sparkle" d="M0 -3.8Q0 0 3.8 0Q0 0 0 3.8Q0 0 -3.8 0Q0 0 0 -3.8Z" opacity="0">
+						<animateMotion dur="2.4s" begin="0s" repeatCount="indefinite"><mpath href="#send-orbit" /></animateMotion>
+						<animate attributeName="opacity" values="0;0.6" keyTimes="0;0.5" calcMode="discrete" dur="2.4s" begin="0s" repeatCount="indefinite" />
+					</path>
+					<path class="wish-send-sparkle" d="M0 -2.7Q0 0 2.7 0Q0 0 0 2.7Q0 0 -2.7 0Q0 0 0 -2.7Z" opacity="0">
+						<animateMotion dur="2.4s" begin="-1.2s" repeatCount="indefinite"><mpath href="#send-orbit" /></animateMotion>
+						<animate attributeName="opacity" values="0;0.6" keyTimes="0;0.5" calcMode="discrete" dur="2.4s" begin="-1.2s" repeatCount="indefinite" />
+					</path>
+				</g>
 				<path class="wish-send-plane" d="M24 2 17 21l-6-10-8-4 21-5ZM24 2 11 11" />
-				<path class="wish-send-sparkle" d="M4.5 12.7Q4.5 16.5 8.3 16.5Q4.5 16.5 4.5 20.3Q4.5 16.5 0.7000000000000002 16.5Q4.5 16.5 4.5 12.7Z" />
-				<path class="wish-send-sparkle" d="M10 18.8Q10 21.2 12.4 21.2Q10 21.2 10 23.599999999999998Q10 21.2 7.6 21.2Q10 21.2 10 18.8Z" />
+				<g class="wish-send-orbit" transform="rotate(-28 14.5 11)">
+					<path class="wish-send-sparkle" d="M0 -3.8Q0 0 3.8 0Q0 0 0 3.8Q0 0 -3.8 0Q0 0 0 -3.8Z" opacity="0">
+						<animateMotion dur="2.4s" begin="0s" repeatCount="indefinite"><mpath href="#send-orbit" /></animateMotion>
+						<animate attributeName="opacity" values="1;0" keyTimes="0;0.5" calcMode="discrete" dur="2.4s" begin="0s" repeatCount="indefinite" />
+					</path>
+					<path class="wish-send-sparkle" d="M0 -2.7Q0 0 2.7 0Q0 0 0 2.7Q0 0 -2.7 0Q0 0 0 -2.7Z" opacity="0">
+						<animateMotion dur="2.4s" begin="-1.2s" repeatCount="indefinite"><mpath href="#send-orbit" /></animateMotion>
+						<animate attributeName="opacity" values="1;0" keyTimes="0;0.5" calcMode="discrete" dur="2.4s" begin="-1.2s" repeatCount="indefinite" />
+					</path>
+				</g>
+				<g class="wish-send-still">
+					<path class="wish-send-sparkle" d="M4.5 12.7Q4.5 16.5 8.3 16.5Q4.5 16.5 4.5 20.3Q4.5 16.5 0.7000000000000002 16.5Q4.5 16.5 4.5 12.7Z" />
+					<path class="wish-send-sparkle" d="M10 18.8Q10 21.2 12.4 21.2Q10 21.2 10 23.599999999999998Q10 21.2 7.6 21.2Q10 21.2 10 18.8Z" />
+				</g>
 			</svg>
 		</button>
 	</form>
