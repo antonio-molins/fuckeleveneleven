@@ -31,6 +31,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Gotchas
 
-- The site is served under `base: '/fuckeleveneleven'` (GitHub Pages project site). Build links to `public/` assets from `import.meta.env.BASE_URL`, never `/`.
+- Served at the root of `fuckeleveneleven.com` (custom domain on this repo's GitHub Pages project site; `antonio-molins.github.io/fuckeleveneleven` redirects there). Asset links still go through `import.meta.env.BASE_URL` so a base path can come back without edits.
 - In e2e, `page.clock` mocks JS time, but CSS animations run on real time. The hero scrawl animates in over about 1.6s, so wait before screenshots.
 - When picking a fixed time for a "which city is next" test, remember that whole and half-hour offsets hit 11:11 at :11 and :41 UTC past the hour, and +x:45 offsets hit it at :26.

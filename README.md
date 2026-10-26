@@ -9,7 +9,7 @@ No wishes are stored, sent or read. There is no backend.
 | Command            | Action                                            |
 | :----------------- | :------------------------------------------------ |
 | `npm install`      | Install dependencies                              |
-| `npm run dev`      | Dev server at `localhost:4321/fuckeleveneleven/`  |
+| `npm run dev`      | Dev server at `localhost:4321`                    |
 | `npm run build`    | Static build to `dist/`                           |
 | `npm run check`    | Type-check (`astro check`)                        |
 | `npm test`         | Unit tests (Vitest)                               |
@@ -19,4 +19,4 @@ First time running e2e: `npx playwright install chromium`.
 
 ## Deploy
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which tests, builds and publishes to GitHub Pages. The `site` and `base` in `astro.config.mjs` must match the repo's Pages URL.
+Pushing to `main` runs `.github/workflows/deploy.yml`, which tests, builds and publishes to GitHub Pages. The custom domain `fuckeleveneleven.com` is set in the repo's Pages settings (DNS at 101domain) and must match `site` in `astro.config.mjs`.
