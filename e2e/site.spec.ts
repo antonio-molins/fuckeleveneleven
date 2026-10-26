@@ -270,6 +270,7 @@ test('the fleeing button comes back when you go back to the wish box', async ({ 
 	test.skip(!(await activeSabotages(page)).includes('flee'), 'never rolled "flee"');
 
 	const submit = page.locator('[data-wish-submit]');
+	await page.locator('[data-wish-input]').fill('a pony');
 	await submit.focus(); // keyboard focus makes it run
 	await expect(submit).not.toHaveAttribute('style', /^$|transform: none/);
 	await expect(form).toHaveClass(/is-fleeing/);
@@ -338,6 +339,7 @@ test('a button that starts fleeing right after you clicked it waits until the cu
 		if ((await activeSabotages(page)).includes('flee') && (await submit.evaluate((el) => el.matches(':hover')))) break;
 	}
 	test.skip(!(await activeSabotages(page)).includes('flee'), 'never rolled "flee" right after a click');
+	await input.fill('a pony'); // something to chase
 
 	// Wiggling over it doesn't scare it.
 	const b = (await submit.boundingBox())!;
@@ -355,7 +357,7 @@ test('a button that starts fleeing right after you clicked it waits until the cu
 
 test('the chase only speaks up once the button has actually run', async ({ page }) => {
 	await open(page);
-	const chaseLines = /Skipping the chase|Caught it|cornered the button|Nice sprint/;
+	const chaseLines = /went around it|manifestation technique|Shortcuts don’t manifest|Caught it|cornered the button|Nice sprint/;
 	const status = page.locator('[data-wish-status]');
 	const form = page.locator('[data-wish-form]');
 	const submit = page.locator('[data-wish-submit]');
@@ -379,7 +381,26 @@ test('the chase only speaks up once the button has actually run', async ({ page 
 	await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 12 });
 	await expect(form).toHaveAttribute('data-dodges', '1');
 	await page.locator('[data-wish-input]').press('Enter');
-	await expect(status).toHaveText('Skipping the chase? The universe only rewards hustle. Denied.');
+	await expect(status).toHaveText(/went around it|manifestation technique|Shortcuts don’t manifest/);
+});
+
+test('the button only runs once there is a wish to chase', async ({ page }, testInfo) => {
+	test.skip(testInfo.project.name !== 'desktop', 'hovering needs a mouse');
+	await open(page);
+	for (let i = 0; i < 40 && !(await activeSabotages(page)).includes('flee'); i++) await submitWish(page, 'x');
+	test.skip(!(await activeSabotages(page)).includes('flee'), 'never rolled "flee"');
+
+	const form = page.locator('[data-wish-form]');
+	const submit = page.locator('[data-wish-submit]');
+	const b = (await submit.boundingBox())!;
+	const [x, y] = [b.x + b.width / 2, b.y + b.height / 2];
+	await page.mouse.move(x - 140, y);
+	await page.mouse.move(x, y, { steps: 12 });
+	await page.waitForTimeout(300);
+	await expect(form).toHaveAttribute('data-dodges', '0'); // empty box: nothing to run with
+
+	await page.mouse.click(x, y);
+	await expect(page.locator('[data-wish-status]')).toHaveText('Empty wishes are a premium feature.');
 });
 
 test('a caught button goes home after an empty wish too', async ({ page }) => {
@@ -389,12 +410,16 @@ test('a caught button goes home after an empty wish too', async ({ page }) => {
 
 	const form = page.locator('[data-wish-form]');
 	const submit = page.locator('[data-wish-submit]');
+	const input = page.locator('[data-wish-input]');
 	const attempts = Number(await form.getAttribute('data-attempts'));
+	await input.fill('a pony');
 	for (let i = 0; i < 6; i++) {
 		const b = (await submit.boundingBox())!;
 		await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
 		await page.waitForTimeout(250);
 	}
+	// Erase the wish without focusing the box (which would call the button home).
+	await input.evaluate((el: HTMLInputElement) => (el.value = ''));
 	const b = (await submit.boundingBox())!;
 	await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
 

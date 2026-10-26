@@ -10,11 +10,16 @@ export const CAUGHT_MESSAGES = [
 	'You cornered the button. Shame the wish was never in the button.',
 	'Finally caught it. Shame wishes don’t care about stamina. Nice sprint, though.',
 ];
-export const SKIPPED_CHASE_MESSAGE = 'Skipping the chase? The universe only rewards hustle. Denied.';
+/** For sending with Enter from the wish box (which calls the button home) after it has run: you went around it. */
+export const SKIPPED_CHASE_MESSAGES = [
+	'You lured the button home, then went around it with Enter? The universe saw that. Denied.',
+	'Enter is not a manifestation technique. Wishes only count if you catch the button.',
+	'The button came back for you and you didn’t even press it. Shortcuts don’t manifest. Denied.',
+];
 
 // The submit button refuses to be pressed: it runs from the cursor, a tap or keyboard focus a few
 // times (2 to 5, once per approach), then gives up and lets you press it (the wish fails anyway). It sneaks back next to the wish box
-// whenever you go back to typing.
+// whenever you go back to typing. It only runs once there's a wish to send: an empty box gets its own rejection.
 export const flee: Sabotage = {
 	id: 'flee',
 	attach({ form, input, submit }) {
@@ -25,10 +30,11 @@ export const flee: Sabotage = {
 		// It starts calm when armed right after a click on it (the re-roll after a denied wish): running then
 		// would look like the wish bounced it off.
 		let calm = submit.matches(':hover');
+		const hasWish = () => input.value.trim() !== '';
 		// `from` is the viewport point it's running from (cursor or finger). It lands far from both that
 		// point and where it was, so a hand still sweeping towards its old spot can't scare it twice.
 		const run = (from?: { x: number; y: number }) => {
-			if (isCaught(form)) return; // out of breath: you can catch it now
+			if (isCaught(form) || !hasWish()) return; // out of breath (you can catch it now), or nothing to chase yet
 			calm = true; // one dodge per approach: the cursor has to leave before it can scare it again
 			form.dataset.dodges = String(Number(form.dataset.dodges) + 1);
 			const area = arena.getBoundingClientRect();
@@ -69,7 +75,7 @@ export const flee: Sabotage = {
 			else if (near && event.target !== input) run({ x: event.clientX, y: event.clientY });
 		};
 		const onTouch = (event: TouchEvent) => {
-			if (isCaught(form)) return; // let the tap through
+			if (isCaught(form) || !hasWish()) return; // let the tap through
 			event.preventDefault();
 			const touch = event.touches[0];
 			run(touch && { x: touch.clientX, y: touch.clientY });
@@ -94,8 +100,8 @@ export const flee: Sabotage = {
 	},
 	// Only asked once it has run at least once (see WishForm): caught, or skipped by sending with Enter.
 	async reject(_wish, { form }) {
-		if (!isCaught(form)) return SKIPPED_CHASE_MESSAGE;
-		return CAUGHT_MESSAGES[Math.floor(Math.random() * CAUGHT_MESSAGES.length)];
+		const messages = isCaught(form) ? CAUGHT_MESSAGES : SKIPPED_CHASE_MESSAGES;
+		return messages[Math.floor(Math.random() * messages.length)];
 	},
 };
 
