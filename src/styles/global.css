@@ -202,11 +202,16 @@ input {
 	line-height: 1;
 }
 
+/* Only the words get struck through; the sparkles survive. */
+.hero-wish-words {
+	position: relative;
+}
+
 .hero-strike {
 	position: absolute;
 	top: 50%;
-	left: -6%;
-	width: 112%;
+	left: -5%;
+	width: 110%;
 	height: auto;
 	overflow: visible;
 	transform: translateY(-50%);
