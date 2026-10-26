@@ -89,15 +89,16 @@ test('rewrites the wish into influencer slop while typing', async ({ page }) => 
 	expect([...value]).toHaveLength('i want a pony'.length);
 });
 
-test('links to Ko-fi, and offers it once a wish has been denied', async ({ page }) => {
+test('offers Ko-fi only once a wish has been denied', async ({ page }) => {
 	await open(page);
-	await expect(page.locator('[data-kofi]')).toHaveAttribute('href', 'https://ko-fi.com/lesselevens');
+	await expect(page.locator('a[href*="ko-fi.com"]:visible')).toHaveCount(0);
 
 	const tip = page.locator('[data-wish-tip]');
 	await expect(tip).toBeHidden();
 	await submitWish(page, 'a pony');
 	await expect(tip).toBeVisible();
 	await expect(tip.getByRole('link')).toHaveAttribute('href', 'https://ko-fi.com/lesselevens');
+	await expect(page.locator('a[href*="ko-fi.com"]')).toHaveCount(1);
 });
 
 test('mobile intro writes the manifesto, then the story slides over it', async ({ page }, testInfo) => {
@@ -111,7 +112,7 @@ test('mobile intro writes the manifesto, then the story slides over it', async (
 	await page.screenshot({ path: testInfo.outputPath('intro-writing.png') });
 
 	await expect(html).not.toHaveClass(/intro/, { timeout: 10_000 });
-	expect((await page.locator('.story').boundingBox())!.y).toBeLessThan(50);
+	await expect(page.locator('.story')).toBeInViewport({ ratio: 1 });
 	await page.waitForTimeout(1_800);
 	await page.screenshot({ path: testInfo.outputPath('intro-landed.png') });
 });
@@ -140,11 +141,11 @@ test('after the intro, the manifesto stays covered and the footer sits below the
 	expect(footer.y + footer.height).toBeLessThanOrEqual(viewport.height);
 });
 
-test('has a centered footer with the Ko-fi link', async ({ page }) => {
+test('has a centered footer with the no-backend note', async ({ page }) => {
 	await open(page);
 	const footer = page.locator('footer');
 	await footer.scrollIntoViewIfNeeded();
-	await expect(footer.getByRole('link', { name: 'Tip me on Ko-fi' })).toBeVisible();
+	await expect(footer).toContainText('No wishes are stored, sent or read.');
 	await expect(footer).toHaveCSS('text-align', 'center');
 });
 

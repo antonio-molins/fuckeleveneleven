@@ -9,7 +9,6 @@ import '@fontsource/permanent-marker/400.css';
 import '../styles/global.css';
 import Countdown from '../components/Countdown.astro';
 import WishForm from '../components/WishForm.astro';
-import { KOFI_URL } from '../lib/links';
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const description = 'The next 11:11 on Earth, a countdown to it, and a wish box that will not take your wish.';
@@ -70,11 +69,7 @@ const description = 'The next 11:11 on Earth, a countdown to it, and a wish box 
 		</main>
 
 		<footer class="site-footer">
-			<p>
-				Liked this? <a href={KOFI_URL} target="_blank" rel="noopener" data-kofi>Tip me on Ko-fi</a>. Unlike the universe,
-				it actually receives.
-			</p>
-			<p class="site-footer-small">No wishes are stored, sent or read. This site has no server to send them to.</p>
+			<p>No wishes are stored, sent or read. This site has no server to send them to.</p>
 		</footer>
 
 		<script>
