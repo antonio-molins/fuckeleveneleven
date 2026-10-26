@@ -8,7 +8,13 @@ import { KOFI_URL } from '../lib/links';
 	<form class="wish-form" data-wish-form autocomplete="off">
 		<label class="visually-hidden" for="wish">Your wish</label>
 		<input id="wish" name="wish" type="text" maxlength="280" placeholder="Make a wish…" data-wish-input />
-		<button type="submit" class="wish-send" data-wish-submit>Send wish</button>
+		<button type="submit" class="wish-send" data-wish-submit>
+			Send
+			<svg class="wish-send-icon" viewBox="0 0 26 24" aria-hidden="true">
+				<path class="wish-send-plane" d="M24 2 17 21l-6-10-8-4 21-5ZM24 2 11 11" />
+				<path class="wish-send-sparkles" d="M4.5 12.7Q4.5 16.5 8.3 16.5Q4.5 16.5 4.5 20.3Q4.5 16.5 0.7000000000000002 16.5Q4.5 16.5 4.5 12.7ZM10 18.8Q10 21.2 12.4 21.2Q10 21.2 10 23.599999999999998Q10 21.2 7.6 21.2Q10 21.2 10 18.8Z" />
+			</svg>
+		</button>
 	</form>
 	<p class="wish-tip">
 		<span data-tip-open>The universe is now accepting wishes. Response times may vary.</span>

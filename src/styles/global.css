@@ -384,6 +384,9 @@ input {
 .wish-send {
 	position: relative;
 	z-index: 2;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35em;
 	padding: 0.55em 0.9em;
 	border: 0;
 	border-radius: 999px;
@@ -392,6 +395,24 @@ input {
 	font-weight: 600;
 	cursor: pointer;
 	transition: transform 0.16s ease-out;
+}
+
+/* Flat, single-colour send icon (paper plane plus sparkles) in the button's text colour. */
+.wish-send-icon {
+	width: 1.3em;
+	height: 1.3em;
+}
+
+.wish-send-plane {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linejoin: round;
+	stroke-linecap: round;
+}
+
+.wish-send-sparkles {
+	fill: currentColor;
 }
 
 .wish-form.is-portal .wish-send {
