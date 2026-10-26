@@ -124,7 +124,7 @@
 
 <script>
 	import { GENERIC_REJECTIONS, pickSabotages, type Cleanup, type Sabotage, type WishElements } from '../lib/sabotage';
-	import { flee, isCaught } from '../lib/sabotage/flee';
+	import { flee } from '../lib/sabotage/flee';
 	import { track } from '../lib/track';
 
 	const els: WishElements = {
@@ -174,10 +174,14 @@
 		}
 
 		busy = true;
-		// If you caught the runaway button, the chase gets the last word; otherwise any active sabotage may.
-		const caught = active.some((s) => s.id === 'flee') && isCaught(els.form);
-		const rejecters = active.filter((s) => s.reject);
-		const rejecter = caught ? flee : rejecters.length ? pick(rejecters) : null;
+		// Once the button has actually run, the chase gets the last word (you caught it, or skipped it with
+		// Enter); a button that never moved says nothing. Otherwise, if autocorrect rewrote what you typed
+		// (it rewrites every keystroke, so any wish it was armed for), it explains itself. Otherwise any
+		// other active sabotage may.
+		const chased = active.some((s) => s.id === 'flee') && Number(els.form.dataset.dodges) > 0;
+		const corrected = active.find((s) => s.id === 'correct');
+		const rejecters = active.filter((s) => s.reject && s.id !== 'flee');
+		const rejecter = chased ? flee : (corrected ?? (rejecters.length ? pick(rejecters) : null));
 		status.textContent = rejecter ? await rejecter.reject!(wish, els) : pick(GENERIC_REJECTIONS);
 		track(`wish-denied-${rejecter?.id ?? 'generic'}`);
 		els.input.value = '';

@@ -102,15 +102,21 @@ test('never accepts a wish, whatever sabotage is active', async ({ page }) => {
 	expect([...seen].every((id) => SABOTAGES.includes(id))).toBe(true);
 });
 
-test('rewrites the wish into influencer slop while typing', async ({ page }) => {
+test('rewrites the wish into influencer slop while typing, then owns up to it', async ({ page }) => {
 	await open(page);
 	for (let i = 0; i < 40 && !(await activeSabotages(page)).includes('correct'); i++) await submitWish(page, 'x');
 	test.skip(!(await activeSabotages(page)).includes('correct'), 'never rolled "correct"');
 
-	await page.locator('[data-wish-input]').pressSequentially('i want a pony');
-	const value = await page.locator('[data-wish-input]').inputValue();
+	const input = page.locator('[data-wish-input]');
+	await input.pressSequentially('i want a pony');
+	const value = await input.inputValue();
 	expect(value).not.toContain('pony');
 	expect([...value]).toHaveLength('i want a pony'.length);
+
+	// Whatever else is active (and the paywall never gets a say), the rejection is the autocorrect's.
+	await input.press('Enter');
+	await expect(page.locator('[data-wish-status]')).toHaveText('Your wish was auto-corrected for maximum alignment. You’re welcome.');
+	expect(await page.locator('[data-paywall]').evaluate((d: HTMLDialogElement) => d.open)).toBe(false);
 });
 
 test('Ko-fi lives in the footer, and a denied wish points down to it', async ({ page }) => {
@@ -345,6 +351,35 @@ test('a button that starts fleeing right after you clicked it waits until the cu
 	await page.mouse.move(x - 300, y - 200, { steps: 6 });
 	await page.mouse.move(x, y, { steps: 12 });
 	await expect(form).toHaveAttribute('data-dodges', '1');
+});
+
+test('the chase only speaks up once the button has actually run', async ({ page }) => {
+	await open(page);
+	const chaseLines = /Skipping the chase|Caught it|cornered the button|Nice sprint/;
+	const status = page.locator('[data-wish-status]');
+	const form = page.locator('[data-wish-form]');
+	const submit = page.locator('[data-wish-submit]');
+	const rollFlee = async () => {
+		for (let i = 0; i < 40 && !(await activeSabotages(page)).includes('flee'); i++) await submitWish(page, 'x');
+		test.skip(!(await activeSabotages(page)).includes('flee'), 'never rolled "flee"');
+	};
+
+	// Sent with Enter before it ever moved: whoever answers, it isn't the chase.
+	for (let round = 0; round < 3; round++) {
+		await rollFlee();
+		await submitWish(page, 'a pony');
+		await expect(status).not.toHaveText(chaseLines);
+	}
+
+	// Scared off once, then skipped with Enter: now the chase calls it out.
+	await rollFlee();
+	await page.locator('[data-wish-input]').fill('a pony');
+	const b = (await submit.boundingBox())!;
+	await page.mouse.move(b.x + b.width / 2 - 140, b.y + b.height / 2);
+	await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 12 });
+	await expect(form).toHaveAttribute('data-dodges', '1');
+	await page.locator('[data-wish-input]').press('Enter');
+	await expect(status).toHaveText('Skipping the chase? The universe only rewards hustle. Denied.');
 });
 
 test('a caught button goes home after an empty wish too', async ({ page }) => {

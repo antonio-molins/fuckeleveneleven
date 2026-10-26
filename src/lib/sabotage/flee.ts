@@ -92,6 +92,7 @@ export const flee: Sabotage = {
 			delete form.dataset.maxDodges;
 		};
 	},
+	// Only asked once it has run at least once (see WishForm): caught, or skipped by sending with Enter.
 	async reject(_wish, { form }) {
 		if (!isCaught(form)) return SKIPPED_CHASE_MESSAGE;
 		return CAUGHT_MESSAGES[Math.floor(Math.random() * CAUGHT_MESSAGES.length)];
